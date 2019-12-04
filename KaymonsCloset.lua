@@ -129,6 +129,7 @@ StaticPopupDialogs["KAYMONSCLOSET_CONFIRM_DELETE"] =
 };
 
 local OUTFIT_MESSAGE_COLOR = {r = 0.2, g = 0.75, b = 0.3};
+local COMBAT_MESSAGE_COLOR = {r = 0.75, g = 0.2, b = 0.3};
 
 local gKaymonsCloset_Initialized = false;
 
@@ -476,8 +477,9 @@ end
 function KaymonsCloset_EquipGearSet(set)
     local bag = -1;
     local count = 0;
-    local printedFull = false
-    if set then
+	local printedFull = false
+	if set == nil then return end
+    if not UnitAffectingCombat("player") then
         for slotname, itemlink in pairs(set.Items) do
 			if itemlink == "nil" then
 				if GetInventoryItemLink("player", KaymonsCloset_SlotInfo[slotname]) then
@@ -518,10 +520,13 @@ function KaymonsCloset_EquipGearSet(set)
 		end
 		gKaymonsCloset_SelectedOutfit = set;
 		UIErrorsFrame:AddMessage(format(KaymonsCloset_cEquipOutfitMessageFormat, set.Name), OUTFIT_MESSAGE_COLOR.r, OUTFIT_MESSAGE_COLOR.g, OUTFIT_MESSAGE_COLOR.b);
+
 		if not gKaymonsCloset_SetSwapInProgress then
 			-- no actual swaps needed made, can safely update
 			KaymonsCloset_Update(true);
 		end
+	else
+		UIErrorsFrame:AddMessage(KaymonsCloset_cCantEquipInCombat, COMBAT_MESSAGE_COLOR.r, COMBAT_MESSAGE_COLOR.g, COMBAT_MESSAGE_COLOR.b);
 	end
 end
 
@@ -570,9 +575,9 @@ function KaymonsCloset_WearBoundOutfit(pBindingIndex)
         if vOutfit.BindingIndex == pBindingIndex then
 
             KaymonsCloset_EquipGearSet(vOutfit);
-            if not gKaymonsCloset_Settings.Options.DisableHotkeyMessages then
-                UIErrorsFrame:AddMessage(format(KaymonsCloset_cEquipOutfitMessageFormat, vOutfit.Name), OUTFIT_MESSAGE_COLOR.r, OUTFIT_MESSAGE_COLOR.g, OUTFIT_MESSAGE_COLOR.b);
-            end
+            -- if not gKaymonsCloset_Settings.Options.DisableHotkeyMessages then
+            --     UIErrorsFrame:AddMessage(format(KaymonsCloset_cEquipOutfitMessageFormat, vOutfit.Name), OUTFIT_MESSAGE_COLOR.r, OUTFIT_MESSAGE_COLOR.g, OUTFIT_MESSAGE_COLOR.b);
+            -- end
             
             -- Remember the binding used to filter for button spam
             
