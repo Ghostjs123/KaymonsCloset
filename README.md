@@ -1,16 +1,20 @@
-# **KaymonsCloset - Mini Outfitter Addon**<br/>
+# **KaymonsCloset - Outfitter Addon**<br/>
+
+![alt text](https://i.imgur.com/9y4MJ2I.png)
 
 **Base Commands:**
-* /kc save {id} - Saves current equipped gear to specified gearset (1-10)
-* /kc equip {id} - Equips the specified gearset (1-10)
-* /kc print {id} - Outputs the specified gearset (1-10)
-* /kc printmissing {id} - Outputs only the missing items from specified gearset (1-10)
-* /kc naked - Removes all items with durability
-* /kc reset - Resets all saved gearsets
+* /kc print {Name} - prints all items in a gearset
+* /kc printmissing {Name} - prints the missing items in a gearset
+* /kc reset - reset KaymonsCloset back to its initial state
+
+**Usage:<br/>**
+Create your gearsets using the panel on your character screen. When updating the slots a
+checkmark means always equip this item, and no checkmark means do not replace this item.
+
+Equip gearsets through the minimap button, the character screen panel, or keybindings. All keybindings need to be assigned to each set in the panel and also bound in Interface Options.
 
 **Notes:**
-* Only supports up to 10 gearsets at the moment
-* There are keybindings available for gearsets 1-10
+* This addon can not swap ANY inventory items in combat (including weapons).
 
-This addon was made by Kaymon(Alliance)-Incendius. If you find 
-bugs or other issues message him in game or on discord Kaymon#3528.
+This addon was made by Kaymon-Incendius \<Scuba Cops>. If you find 
+bugs or other issues message him in game or on discord Kaymon#3528. A great deal of the UI code was used from the original outfitter so huge thanks to John Stephen.
