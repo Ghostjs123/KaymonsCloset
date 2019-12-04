@@ -1,0 +1,32 @@
+<Bindings>
+	<Binding name="KAYMONSCLOSET_OUTFIT1" header="KAYMONSCLOSET_TITLE">
+		KaymonsCloset_WearBoundOutfit(1);
+	</Binding>
+	<Binding name="KAYMONSCLOSET_OUTFIT2">
+		KaymonsCloset_WearBoundOutfit(2);
+	</Binding>
+	<Binding name="KAYMONSCLOSET_OUTFIT3">
+		KaymonsCloset_WearBoundOutfit(3);
+	</Binding>
+	<Binding name="KAYMONSCLOSET_OUTFIT4">
+		KaymonsCloset_WearBoundOutfit(4);
+	</Binding>
+	<Binding name="KAYMONSCLOSET_OUTFIT5">
+		KaymonsCloset_WearBoundOutfit(5);
+	</Binding>
+	<Binding name="KAYMONSCLOSET_OUTFIT6">
+		KaymonsCloset_WearBoundOutfit(6);
+	</Binding>
+	<Binding name="KAYMONSCLOSET_OUTFIT7">
+		KaymonsCloset_WearBoundOutfit(7);
+	</Binding>
+	<Binding name="KAYMONSCLOSET_OUTFIT8">
+		KaymonsCloset_WearBoundOutfit(8);
+	</Binding>
+	<Binding name="KAYMONSCLOSET_OUTFIT9">
+		KaymonsCloset_WearBoundOutfit(9);
+	</Binding>
+	<Binding name="KAYMONSCLOSET_OUTFIT10">
+		KaymonsCloset_WearBoundOutfit(10);
+	</Binding>
+</Bindings>

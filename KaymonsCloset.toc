@@ -1,0 +1,11 @@
+## Interface: 11300
+## Title: KaymonsCloset
+## Version: 1.0
+## Notes: Tiny outfitter addon
+## Author: Kaymon
+## SavedVariables: KaymonsCloset_TestTable
+## SavedVariablesPerCharacter: gKaymonsCloset_Settings
+KaymonsClosetStrings.lua
+KaymonsCloset.lua
+KaymonsCloset.xml
+Bindings.xml

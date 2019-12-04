@@ -1,0 +1,1260 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+
+    <Script file="KaymonsCloset.lua"/>
+
+    <Button name="KaymonsClosetTabTemplate" inherits="CharacterFrameTabButtonTemplate" virtual="true">
+		<Scripts>
+			<OnClick>
+				PanelTemplates_Tab_OnClick(self, KaymonsClosetFrame);
+				KaymonsCloset_ShowPanel(self, KaymonsClosetFrame.selectedTab);
+			</OnClick>
+		</Scripts>
+	</Button>
+
+    <Frame name="KaymonsClosetScrollbarTrenchTemplate" virtual="true">
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture name="$parentTop" file="Interface\Addons\KaymonsCloset\Textures\ScrollbarTrench">
+					<Size>
+						<AbsDimension x="27" y="26"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT"/>
+					</Anchors>
+					<TexCoords left="0" right="0.84375" top="0" bottom="0.1015625"/>
+				</Texture>
+				<Texture name="$parentMiddle" file="Interface\Addons\KaymonsCloset\Textures\ScrollbarTrench">
+					<Size>
+						<AbsDimension x="27" y="0"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parentTop" relativePoint="BOTTOMLEFT"/>
+					</Anchors>
+					<TexCoords left="0" right="0.84375" top="0.1015625" bottom="0.90234375"/>
+				</Texture>
+				<Texture name="$parentBottom" file="Interface\Addons\KaymonsCloset\Textures\ScrollbarTrench">
+					<Size>
+						<AbsDimension x="27" y="25"/>
+					</Size>
+					<Anchors>
+						<Anchor point="BOTTOMLEFT"/>
+					</Anchors>
+					<TexCoords left="0" right="0.84375" top="0.90234375" bottom="1"/>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnSizeChanged>
+				KaymonsClosetScrollbarTrench_SizeChanged(self);
+			</OnSizeChanged>
+		</Scripts>
+	</Frame>
+
+    <CheckButton name="KaymonsClosetEnableTemplate" virtual="true">
+		<Size>
+			<AbsDimension x="24" y="24" />
+		</Size>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture>
+					<Size>
+						<AbsDimension x="14" y="14" />
+					</Size>
+					<Anchors>
+						<Anchor point="CENTER" />
+					</Anchors>
+					<Color r="0" g="0" b="0" a="0.6" />
+				</Texture>
+			</Layer>
+		</Layers>
+		<NormalTexture file="Interface\Buttons\UI-CheckBox-Up" />
+		<PushedTexture file="Interface\Buttons\UI-CheckBox-Down" />
+		<HighlightTexture file="Interface\Buttons\UI-CheckBox-Highlight" alphaMode="ADD" />
+		<CheckedTexture file="Interface\Buttons\UI-CheckBox-Check" />
+		<DisabledCheckedTexture file="Interface\Buttons\UI-CheckBox-Check-Disabled" />
+		<Scripts>
+			<OnClick>
+				KaymonsCloset_SlotEnableClicked(self, arg1);
+			</OnClick>
+            <OnReceiveDrag>
+                KaymonsCloset_SlotEnableClicked(self, "LeftButton", 1);
+            </OnReceiveDrag>
+            <OnEnter>
+				GameTooltip_AddNewbieTip(self, KaymonsCloset_cSlotEnableTitle, 1, 1, 1, KaymonsCloset_cSlotEnableDescription, 1);
+            </OnEnter>
+            <OnLeave>
+				GameTooltip:Hide();
+            </OnLeave>
+		</Scripts>
+	</CheckButton>
+
+    <Button name="KaymonsClosetItemMenuTemplate" virtual="true">
+		<Size>
+			<AbsDimension x="17" y="17"/>
+		</Size>
+		<Scripts>
+			<OnClick>
+				ToggleDropDownMenu(nil, nil, self);
+			</OnClick>
+			<OnHide>
+				CloseDropDownMenus();
+			</OnHide>
+			<OnLoad>
+				self.SavedHeight = self:GetHeight();
+				self.ChangedValueFunc = KaymonsCloset_OutfitItemSelected;
+			</OnLoad>
+			<OnShow>
+				KaymonsClosetItemDropDown_OnLoad(self);
+			</OnShow>
+		</Scripts>
+		<NormalTexture name="$parentNormalTexture" file="Interface\ChatFrame\UI-ChatIcon-ScrollDown-Up">
+			<TexCoords left="0.09375" top="0.09375" right="0.90625" bottom="0.90625"/>
+		</NormalTexture>
+		<PushedTexture name="$parentPushedTexture" file="Interface\ChatFrame\UI-ChatIcon-ScrollDown-Down">
+			<TexCoords left="0.09375" top="0.09375" right="0.90625" bottom="0.90625"/>
+		</PushedTexture>
+		<DisabledTexture name="$parentDisabledTexture" file="Interface\ChatFrame\UI-ChatIcon-ScrollDown-Disabled">
+			<TexCoords left="0.09375" top="0.09375" right="0.90625" bottom="0.90625"/>
+		</DisabledTexture>
+		<HighlightTexture name="$parentHighlightTexture" file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD"/>
+	</Button>
+    <Frame name="KaymonsClosetItemTemplate" hidden="true" virtual="true">
+		<Size>
+			<AbsDimension x="224" y="18" />
+		</Size>
+		<Frames>
+			<Frame name="$parentItem" hidden="true" setAllPoints="true">
+				<Layers>
+					<Layer level="OVERLAY">
+						<!-- <Texture name="$parentIcon" file=""> -->
+						<Texture name="$parentIcon">
+							<Size>
+								<AbsDimension x="16" y="16" />
+							</Size>
+							<Anchors>
+								<Anchor point="TOPLEFT">
+									<Offset>
+										<AbsDimension x="28" y="-1" />
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						<FontString name="$parentName" text="Outfit name" inherits="GameFontNormal" justifyH="LEFT" justifyV="BOTTOM">
+							<Size>
+								<AbsDimension x="175" y="16" />
+							</Size>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeTo="$parentIcon" relativePoint="TOPRIGHT">
+									<Offset>
+										<AbsDimension x="3" y="2" />
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Frame name="$parentOutfit" hidden="true" setAllPoints="true">
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="$parentName" text="Outfit name" inherits="GameFontNormal" justifyH="LEFT"
+							justifyV="BOTTOM">
+							<Size>
+								<AbsDimension x="175" y="16" />
+							</Size>
+							<Anchors>
+								<Anchor point="TOPLEFT">
+									<Offset>
+										<AbsDimension x="28" y="1" />
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Frames>
+					<CheckButton name="$parentSelected" hidden="false">
+						<Size>
+							<AbsDimension x="24" y="24" />
+						</Size>
+						<Anchors>
+							<Anchor point="BOTTOMLEFT">
+								<Offset>
+									<AbsDimension x="5" y="-3" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<NormalTexture file="Interface\Buttons\UI-CheckBox-Up" />
+						<PushedTexture file="Interface\Buttons\UI-CheckBox-Down" />
+						<HighlightTexture file="Interface\Buttons\UI-CheckBox-Highlight" alphaMode="ADD" />
+						<CheckedTexture file="Interface\Buttons\UI-CheckBox-Check" />
+						<DisabledCheckedTexture file="Interface\Buttons\UI-CheckBox-Check-Disabled" />
+						<Scripts>
+							<OnClick>
+								KaymonsClosetItem_CheckboxClicked(self:GetParent():GetParent());
+							</OnClick>
+						</Scripts>
+					</CheckButton>
+					<Button name="$parentMenu" inherits="KaymonsClosetItemMenuTemplate">
+						<Anchors>
+							<Anchor point="CENTER" relativeTo="$parentName" relativePoint="RIGHT">
+								<Offset>
+									<AbsDimension x="10" y="-2" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</Button>
+				</Frames>
+            </Frame>
+			<Frame name="$parentCategory" hidden="true" setAllPoints="true">
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="$parentName" inherits="GameFontNormal" justifyH="LEFT" justifyV="BOTTOM">
+							<Size>
+								<AbsDimension x="200" y="16" />
+							</Size>
+							<Anchors>
+								<Anchor point="BOTTOMLEFT">
+									<Offset>
+										<AbsDimension x="21" y="3" />
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<Color r="1" g="1" b="1" />
+						</FontString>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="$parentExpand">
+						<Size>
+							<AbsDimension x="16" y="16" />
+						</Size>
+						<Anchors>
+							<Anchor point="BOTTOMLEFT">
+								<Offset>
+									<AbsDimension x="5" y="1" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<NormalTexture setAllPoints="true" file="Interface\Buttons\UI-MinusButton-UP" />
+						<HighlightTexture setAllPoints="true" name="$parentHighlight" file="Interface\Buttons\UI-PlusButton-Hilight"
+							alphaMode="ADD" />
+						<Scripts>
+							<OnLoad>
+								self:RegisterForClicks("LeftButtonUp", "RightButtonUp");
+							</OnLoad>
+							<OnClick>
+								KaymonsClosetItem_OnClick(self, self:GetParent():GetParent());
+							</OnClick>
+						</Scripts>
+					</Button>
+				</Frames>
+			</Frame>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				self:RegisterForClicks("LeftButtonUp", "RightButtonUp");
+			</OnLoad>
+			<OnClick>
+				KaymonsClosetItem_OnClick(self, arg1);
+			</OnClick>
+			<OnEnter>
+				KaymonsClosetItem_OnEnter(self);
+			</OnEnter>
+			<OnLeave>
+				KaymonsClosetItem_OnLeave(self);
+			</OnLeave>
+		</Scripts>
+	</Frame>
+
+    <Frame name="KaymonsClosetButtonFrame" hidden="false" parent="PaperDollFrame" setAllPoints="true">
+		<Frames>
+			<Button name="KaymonsClosetButton" hidden="false">
+				<Size>
+					<AbsDimension x="64" y="32" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-32" y="-40" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<NormalTexture file="Interface\Addons\KaymonsCloset\Textures\KaymonsCloset-Button">
+					<TexCoords left="0" right="1" top="0" bottom="0.5" />
+				</NormalTexture>
+				<PushedTexture file="Interface\Addons\KaymonsCloset\Textures\KaymonsCloset-Button">
+					<TexCoords left="0" right="1" top="0.5" bottom="1" />
+				</PushedTexture>
+				<HighlightTexture file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD" />
+				<Scripts>
+					<OnClick>
+						KaymonsCloset_ToggleKaymonsClosetFrame();
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Frame name="KaymonsClosetFrame" frameStrata="HIGH" enableMouse="true" hidden="true">
+				<Size>
+					<AbsDimension x="256" y="344" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-33" y="-40" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BORDER">
+						<Texture file="Interface\AddOns\KaymonsCloset\Textures\KaymonsClosetFrame-Top">
+							<Size>
+								<AbsDimension x="256" y="256" />
+							</Size>
+							<Anchors>
+								<Anchor point="TOPLEFT" />
+							</Anchors>
+						</Texture>
+						<Texture file="Interface\AddOns\KaymonsCloset\Textures\KaymonsClosetFrame-Bottom">
+							<Size>
+								<AbsDimension x="256" y="128" />
+							</Size>
+							<Anchors>
+								<Anchor point="TOPLEFT">
+									<Offset>
+										<AbsDimension x="0" y="-256" />
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+					</Layer>
+					<Layer level="OVERLAY">
+						<FontString name="$parentTitle" text="KaymonsCloset_cTitleVersion" inherits="GameFontHighlight">
+							<Anchors>
+								<Anchor point="TOP">
+									<Offset>
+										<AbsDimension x="-10" y="-6" />
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="KaymonsClosetCloseButton" inherits="UIPanelCloseButton">
+						<Anchors>
+							<Anchor point="TOPRIGHT">
+								<Offset>
+									<AbsDimension x="5" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</Button>
+					<Frame name="KaymonsClosetMainFrame" hidden="true" setAllPoints="true">
+						<Layers>
+							<Layer level="OVERLAY">
+								<Texture name="$parentHighlight" hidden="true" alphaMode="ADD" file="Interface\HelpFrame\HelpFrameButton-Highlight">
+									<Size>
+										<AbsDimension x="224" y="18" />
+									</Size>
+									<Anchors>
+										<Anchor point="TOPLEFT" />
+									</Anchors>
+									<TexCoords left="0" right="1.0" top="0" bottom="0.578125" />
+								</Texture>
+								<FontString text="KaymonsCloset_cTitle" inherits="GameFontNormalLarge">
+									<Anchors>
+										<Anchor point="TOP">
+											<Offset>
+												<AbsDimension x="0" y="-36"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+							</Layer>
+							<Layer level="BACKGROUND">
+								<Texture name="$parentBackground" file="Interface\Addons\KaymonsCloset\Textures\Icon">
+									<Size>
+										<AbsDimension x="226" y="226"/>
+									</Size>
+									<Anchors>
+										<Anchor point="CENTER">
+											<Offset>
+												<AbsDimension x="-13" y="-20"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+								<Texture name="$parentButtonBarBackground" file="Interface\Addons\KaymonsCloset\Textures\ButtonBarBackground">
+									<Size>
+										<AbsDimension x="253" y="20"/>
+									</Size>
+									<Anchors>
+										<Anchor point="BOTTOMLEFT">
+											<Offset>
+												<AbsDimension x="0" y="7"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Frames>
+							<Frame name="$parentScrollbarTrench" inherits="KaymonsClosetScrollbarTrenchTemplate">
+								<Size>
+									<AbsDimension x="27" y="258"/>
+								</Size>
+								<Anchors>
+									<Anchor point="BOTTOMRIGHT" relativeTo="$parentButtonBarBackground" relativePoint="TOPRIGHT">
+										<Offset>
+											<AbsDimension x="0" y="1"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Frame>
+							<Button name="KaymonsClosetItem0" inherits="KaymonsClosetItemTemplate">
+								<Anchors>
+									<Anchor point="TOPLEFT">
+										<Offset>
+											<AbsDimension x="1" y="-63" />
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Button>
+							<Button name="KaymonsClosetItem1" inherits="KaymonsClosetItemTemplate">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetItem0" relativePoint="BOTTOMLEFT" />
+								</Anchors>
+							</Button>
+							<Button name="KaymonsClosetItem2" inherits="KaymonsClosetItemTemplate">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetItem1" relativePoint="BOTTOMLEFT" />
+								</Anchors>
+							</Button>
+							<Button name="KaymonsClosetItem3" inherits="KaymonsClosetItemTemplate">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetItem2" relativePoint="BOTTOMLEFT" />
+								</Anchors>
+							</Button>
+							<Button name="KaymonsClosetItem4" inherits="KaymonsClosetItemTemplate">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetItem3" relativePoint="BOTTOMLEFT" />
+								</Anchors>
+							</Button>
+							<Button name="KaymonsClosetItem5" inherits="KaymonsClosetItemTemplate">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetItem4" relativePoint="BOTTOMLEFT" />
+								</Anchors>
+							</Button>
+							<Button name="KaymonsClosetItem6" inherits="KaymonsClosetItemTemplate">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetItem5" relativePoint="BOTTOMLEFT" />
+								</Anchors>
+							</Button>
+							<Button name="KaymonsClosetItem7" inherits="KaymonsClosetItemTemplate">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetItem6" relativePoint="BOTTOMLEFT" />
+								</Anchors>
+							</Button>
+							<Button name="KaymonsClosetItem8" inherits="KaymonsClosetItemTemplate">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetItem7" relativePoint="BOTTOMLEFT" />
+								</Anchors>
+							</Button>
+							<Button name="KaymonsClosetItem9" inherits="KaymonsClosetItemTemplate">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetItem8" relativePoint="BOTTOMLEFT" />
+								</Anchors>
+							</Button>
+							<Button name="KaymonsClosetItem10" inherits="KaymonsClosetItemTemplate">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetItem9" relativePoint="BOTTOMLEFT" />
+								</Anchors>
+							</Button>
+							<Button name="KaymonsClosetItem11" inherits="KaymonsClosetItemTemplate">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetItem10" relativePoint="BOTTOMLEFT" />
+								</Anchors>
+							</Button>
+							<Button name="KaymonsClosetItem12" inherits="KaymonsClosetItemTemplate">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetItem11" relativePoint="BOTTOMLEFT" />
+								</Anchors>
+							</Button>
+							<Button name="KaymonsClosetItem13" inherits="KaymonsClosetItemTemplate">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetItem12" relativePoint="BOTTOMLEFT" />
+								</Anchors>
+							</Button>
+							<ScrollFrame name="$parentScrollFrame" hidden="false" inherits="FauxScrollFrameTemplate">
+								<Size>
+									<AbsDimension x="224" y="252"/>
+								</Size>
+								<Anchors>
+									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetItem0">
+										<Offset>
+											<AbsDimension x="0" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Scripts>
+									<OnVerticalScroll>
+										FauxScrollFrame_OnVerticalScroll(self, offset, KaymonsClosetItem0:GetHeight(), KaymonsCloset_OnVerticalScroll);
+									</OnVerticalScroll>
+								</Scripts>
+							</ScrollFrame>
+							<Button name="KaymonsClosetNewButton" inherits="UIPanelButtonTemplate" text="KaymonsCloset_cNewOutfit">
+								<Size>
+									<AbsDimension x="115" y="21" />
+								</Size>
+								<Anchors>
+									<Anchor point="BOTTOMRIGHT">
+										<Offset>
+											<AbsDimension x="-7" y="6" />
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Scripts>
+									<OnClick>
+										KaymonsCloset_CreateNewOutfit();
+									</OnClick>
+								</Scripts>
+							</Button>
+						</Frames>
+						<Scripts>
+							<OnLoad>
+								KaymonsClosetMainFrameBackground:SetVertexColor(1, 1, 1, 0.20);
+							</OnLoad>
+						</Scripts>
+					</Frame>
+					
+					<Frame name="KaymonsClosetOptionsFrame" hidden="true" setAllPoints="true">
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="$parentBackground" file="Interface\Addons\KaymonsCloset\Textures\MinimapButton">
+									<Size>
+										<AbsDimension x="280" y="280"/>
+									</Size>
+									<Anchors>
+										<Anchor point="CENTER">
+											<Offset>
+												<AbsDimension x="0" y="-30"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+							</Layer>
+							<Layer level="OVERLAY">
+								<FontString text="KaymonsCloset_cOptionsTitle" inherits="GameFontNormalLarge">
+									<Anchors>
+										<Anchor point="TOP">
+											<Offset>
+												<AbsDimension x="0" y="-36"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+						<Frames>
+							<CheckButton name="KaymonsClosetShowMinimapButton" inherits="OptionsCheckButtonTemplate">
+								<Anchors>
+									<Anchor point="TOPLEFT">
+										<Offset>
+											<AbsDimension x="15" y="-120"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Scripts>
+									<OnLoad>
+										getglobal(self:GetName().."Text"):SetText(KaymonsCloset_cShowMinimapButton);
+									</OnLoad>
+									<OnClick>
+										KaymonsCloset_SetShowMinimapButton(self:GetChecked());
+									</OnClick>
+									<OnEnter>
+										if self:GetChecked() then
+											GameTooltip_AddNewbieTip(self, KaymonsCloset_cShowMinimapButton, 1.0, 1.0, 1.0, KaymonsCloset_cShowMinimapButtonOnDescription, 1);
+										else
+											GameTooltip_AddNewbieTip(self, KaymonsCloset_cShowMinimapButton, 1.0, 1.0, 1.0, KaymonsCloset_cShowMinimapButtonOffDescription, 1);
+										end
+									</OnEnter>
+									<OnLeave>
+										GameTooltip:Hide();
+									</OnLeave>
+								</Scripts>
+							</CheckButton>
+							<CheckButton name="KaymonsClosetRememberVisibility" inherits="OptionsCheckButtonTemplate">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetShowMinimapButton" relativePoint="BOTTOMLEFT">
+										<Offset>
+											<AbsDimension x="0" y="-10"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Scripts>
+									<OnLoad>
+										getglobal(self:GetName().."Text"):SetText(KaymonsCloset_cRememberVisibility);
+									</OnLoad>
+									<OnClick>
+										KaymonsCloset_SetRememberVisibility(self:GetChecked());
+									</OnClick>
+									<OnEnter>
+										if self:GetChecked() then
+											GameTooltip_AddNewbieTip(self, KaymonsCloset_cRememberVisibility, 1.0, 1.0, 1.0, KaymonsCloset_cRememberVisibilityOnDescription, 1);
+										else
+											GameTooltip_AddNewbieTip(self, KaymonsCloset_cRememberVisibility, 1.0, 1.0, 1.0, KaymonsCloset_cRememberVisibilityOffDescription, 1);
+										end
+									</OnEnter>
+									<OnLeave>
+										GameTooltip:Hide();
+									</OnLeave>
+								</Scripts>
+							</CheckButton>
+							<CheckButton name="KaymonsClosetShowHotkeyMessages" inherits="OptionsCheckButtonTemplate">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetRememberVisibility" relativePoint="BOTTOMLEFT">
+										<Offset>
+											<AbsDimension x="0" y="-10"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Scripts>
+									<OnLoad>
+										getglobal(self:GetName().."Text"):SetText(KaymonsCloset_cShowHotkeyMessages);
+									</OnLoad>
+									<OnClick>
+										KaymonsCloset_SetShowHotkeyMessages(self:GetChecked());
+									</OnClick>
+									<OnEnter>
+										if self:GetChecked() then
+											GameTooltip_AddNewbieTip(self, KaymonsCloset_cShowHotkeyMessages, 1.0, 1.0, 1.0, KaymonsCloset_cShowHotkeyMessagesOnDescription, 1);
+										else
+											GameTooltip_AddNewbieTip(self, KaymonsCloset_cShowHotkeyMessages, 1.0, 1.0, 1.0, KaymonsCloset_cShowHotkeyMessagesOffDescription, 1);
+										end
+									</OnEnter>
+									<OnLeave>
+										GameTooltip:Hide();
+									</OnLeave>
+								</Scripts>
+							</CheckButton>
+						</Frames>
+						<Scripts>
+							<OnLoad>
+								KaymonsClosetOptionsFrameBackground:SetVertexColor(1, 1, 1, 0.20);
+							</OnLoad>
+						</Scripts>
+					</Frame>
+					
+					<Frame name="KaymonsClosetAboutFrame" hidden="true" setAllPoints="true">
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture file="Interface\Addons\KaymonsCloset\Textures\GuildLogo2">
+									<Size>
+										<AbsDimension x="220" y="220"/>
+									</Size>
+									<Anchors>
+										<Anchor point="CENTER">
+											<Offset>
+												<AbsDimension x="0" y="-30"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+							</Layer>
+							<Layer level="OVERLAY">
+								<FontString text="KaymonsCloset_cAboutTitle" inherits="GameFontNormalLarge">
+									<Anchors>
+										<Anchor point="TOP">
+											<Offset>
+												<AbsDimension x="0" y="-36"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+								<FontString name="KaymonsClosetAboutTitleVersion" text="KaymonsCloset_cTitleVersion" inherits="GameFontNormalLarge">
+									<Anchors>
+										<Anchor point="TOP">
+											<Offset>
+												<AbsDimension x="0" y="-80"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+								<FontString name="KaymonsClosetAboutAuthor" text="KaymonsCloset_cAuthor" inherits="GameFontHighlight">
+									<Size>
+										<AbsDimension x="230"/>
+									</Size>
+									<Anchors>
+										<Anchor point="TOP" relativeTo="KaymonsClosetAboutTitleVersion" relativePoint="BOTTOM">
+											<Offset>
+												<AbsDimension x="0" y="-5"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+								<FontString name="KaymonsClosetSpecialThanksTitle" text="KaymonsCloset_cSpecialThanksTitle" inherits="GameFontNormal">
+									<Size>
+										<AbsDimension x="230"/>
+									</Size>
+									<Anchors>
+										<Anchor point="TOP" relativeTo="KaymonsClosetAboutAuthor" relativePoint="TOP">
+											<Offset>
+												<AbsDimension x="0" y="-50"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+								<FontString name="KaymonsClosetSpecialThanksNames" text="KaymonsCloset_cSpecialThanksNames" inherits="GameFontHighlight">
+									<Size>
+										<AbsDimension x="230"/>
+									</Size>
+									<Anchors>
+										<Anchor point="TOP" relativeTo="KaymonsClosetSpecialThanksTitle" relativePoint="BOTTOM">
+											<Offset>
+												<AbsDimension x="0" y="-5"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+						<Frames>
+						</Frames>
+					</Frame>
+					<Button name="KaymonsClosetFrameTab1" inherits="KaymonsClosetTabTemplate" id="1" text="KaymonsCloset_cKaymonsClosetTabTitle">
+						<Anchors>
+							<Anchor point="BOTTOMRIGHT">
+								<Offset>
+									<AbsDimension x="-7" y="-29"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</Button>
+					<Button name="KaymonsClosetFrameTab2" inherits="KaymonsClosetTabTemplate" id="2" text="KaymonsCloset_cOptionsTabTitle">
+						<Anchors>
+							<Anchor point="RIGHT" relativeTo="KaymonsClosetFrameTab1" relativePoint="LEFT">
+								<Offset>
+									<AbsDimension x="16" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</Button>
+					<Button name="KaymonsClosetFrameTab3" inherits="KaymonsClosetTabTemplate" id="3" text="KaymonsCloset_cAboutTabTitle">
+						<Anchors>
+							<Anchor point="RIGHT" relativeTo="KaymonsClosetFrameTab2" relativePoint="LEFT">
+								<Offset>
+									<AbsDimension x="16" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</Button>
+				</Frames>
+				<Scripts>
+					<OnLoad>
+						KaymonsCloset_OnLoad(self);
+					</OnLoad>
+					<OnShow>
+						KaymonsCloset_OnShow(self);
+					</OnShow>
+					<OnHide>
+						KaymonsCloset_OnHide();
+					</OnHide>
+					<OnEvent>
+						KaymonsCloset_OnEvent(event, arg1);
+					</OnEvent>
+				</Scripts>
+			</Frame>
+			<Frame name="KaymonsClosetSlotEnables" hidden="true" setAllPoints="true">
+				<Frames>
+					<!-- <Button name="KaymonsClosetEnableAll" inherits="KaymonsClosetSmallButtonTemplate" text="Enable none"> -->
+					<Button name="KaymonsClosetEnableAll" inherits="GameMenuButtonTemplate" text="KaymonsCloset_cEnableNone">
+						<NormalText name="$parentText" inherits="GameFontNormalSmall" />
+						<Size>
+							<AbsDimension x="80" y="18" />
+						</Size>
+						<Anchors>
+							<Anchor point="TOP" relativeTo="PaperDollFrame">
+								<Offset>
+									<AbsDimension x="-45" y="-57" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnClick>
+								KaymonsCloset_SetAllSlotEnables(false);
+							</OnClick>
+						</Scripts>
+					</Button>
+					<!-- <Button name="KaymonsClosetEnableNone" inherits="KaymonsClosetSmallButtonTemplate" text="KaymonsCloset_cEnableAll"> -->
+					<Button name="KaymonsClosetEnableNone" inherits="GameMenuButtonTemplate" text="KaymonsCloset_cEnableAll">
+						<NormalText name="$parentText" inherits="GameFontNormalSmall" />
+						<Size>
+							<AbsDimension x="80" y="18" />
+						</Size>
+						<Anchors>
+							<Anchor point="TOP" relativeTo="PaperDollFrame">
+								<Offset>
+									<AbsDimension x="45" y="-57" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnClick>
+								KaymonsCloset_SetAllSlotEnables(true);
+							</OnClick>
+						</Scripts>
+					</Button>
+					<CheckButton name="KaymonsClosetEnableHeadSlot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeTo="CharacterHeadSlot">
+								<Offset>
+									<AbsDimension x="-4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "HeadSlot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="KaymonsClosetEnableNeckSlot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeTo="CharacterNeckSlot">
+								<Offset>
+									<AbsDimension x="-4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "NeckSlot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="KaymonsClosetEnableShoulderSlot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeTo="CharacterShoulderSlot">
+								<Offset>
+									<AbsDimension x="-4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "ShoulderSlot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="KaymonsClosetEnableBackSlot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeTo="CharacterBackSlot">
+								<Offset>
+									<AbsDimension x="-4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "BackSlot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="KaymonsClosetEnableChestSlot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeTo="CharacterChestSlot">
+								<Offset>
+									<AbsDimension x="-4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "ChestSlot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="KaymonsClosetEnableShirtSlot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeTo="CharacterShirtSlot">
+								<Offset>
+									<AbsDimension x="-4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "ShirtSlot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="KaymonsClosetEnableTabardSlot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeTo="CharacterTabardSlot">
+								<Offset>
+									<AbsDimension x="-4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "TabardSlot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="KaymonsClosetEnableWristSlot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeTo="CharacterWristSlot">
+								<Offset>
+									<AbsDimension x="-4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "WristSlot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="KaymonsClosetEnableHandsSlot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPRIGHT" relativeTo="CharacterHandsSlot">
+								<Offset>
+									<AbsDimension x="4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "HandsSlot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="KaymonsClosetEnableWaistSlot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPRIGHT" relativeTo="CharacterWaistSlot">
+								<Offset>
+									<AbsDimension x="4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "WaistSlot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="KaymonsClosetEnableLegsSlot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPRIGHT" relativeTo="CharacterLegsSlot">
+								<Offset>
+									<AbsDimension x="4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "LegsSlot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="KaymonsClosetEnableFeetSlot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPRIGHT" relativeTo="CharacterFeetSlot">
+								<Offset>
+									<AbsDimension x="4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "FeetSlot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="KaymonsClosetEnableFinger0Slot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPRIGHT" relativeTo="CharacterFinger0Slot">
+								<Offset>
+									<AbsDimension x="4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "Finger0Slot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="KaymonsClosetEnableFinger1Slot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPRIGHT" relativeTo="CharacterFinger1Slot">
+								<Offset>
+									<AbsDimension x="4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "Finger1Slot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="KaymonsClosetEnableTrinket0Slot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPRIGHT" relativeTo="CharacterTrinket0Slot">
+								<Offset>
+									<AbsDimension x="4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "Trinket0Slot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="KaymonsClosetEnableTrinket1Slot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPRIGHT" relativeTo="CharacterTrinket1Slot">
+								<Offset>
+									<AbsDimension x="4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "Trinket1Slot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="KaymonsClosetEnableMainHandSlot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeTo="CharacterMainHandSlot">
+								<Offset>
+									<AbsDimension x="-4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "MainHandSlot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="KaymonsClosetEnableSecondaryHandSlot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeTo="CharacterSecondaryHandSlot">
+								<Offset>
+									<AbsDimension x="-4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "SecondaryHandSlot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="KaymonsClosetEnableRangedSlot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeTo="CharacterRangedSlot">
+								<Offset>
+									<AbsDimension x="-4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "RangedSlot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="KaymonsClosetEnableAmmoSlot" inherits="KaymonsClosetEnableTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeTo="CharacterAmmoSlot">
+								<Offset>
+									<AbsDimension x="-4" y="4" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.SlotName = "AmmoSlot";</OnLoad>
+						</Scripts>
+					</CheckButton>
+				</Frames>
+			</Frame>
+		</Frames>
+	</Frame>
+
+    <EditBox name="KaymonsClosetInputBoxTemplate" inherits="InputBoxTemplate" virtual="true">
+		<Scripts>
+			<OnLoad>
+				KaymonsClosetInputBox_OnLoad(self, 0);
+			</OnLoad>
+			<OnTabPressed>
+				KaymonsClosetInputBox_TabPressed();
+			</OnTabPressed>
+		</Scripts>
+	</EditBox>
+
+    <Frame name="KaymonsClosetNameOutfitDialog" toplevel="true" frameStrata="DIALOG" enableMouse="true" hidden="true" parent="KaymonsClosetFrame">
+		<Size>
+			<AbsDimension x="315" y="142" />
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER" />
+		</Anchors>
+		<Backdrop bgFile="Interface\Addons\KaymonsCloset\Textures\DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border"
+			tile="true">
+			<BackgroundInsets>
+				<AbsInset left="11" right="12" top="12" bottom="11" />
+			</BackgroundInsets>
+			<TileSize>
+				<AbsValue val="32" />
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="32" />
+			</EdgeSize>
+		</Backdrop>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture name="$parentFrameHeader" file="Interface\DialogFrame\UI-DialogBox-Header">
+					<Size>
+						<AbsDimension x="256" y="64" />
+					</Size>
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset>
+								<AbsDimension x="0" y="12" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentTitle" inherits="GameFontNormal" text="KaymonsCloset_cNewOutfit">
+					<Anchors>
+						<Anchor point="TOP" relativeTo="$parentFrameHeader">
+							<Offset>
+								<AbsDimension x="0" y="-14" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentError" inherits="GameFontRed" hidden="true" text="KaymonsCloset_cNameAlreadyUsedError">
+					<Size>
+						<AbsDimension x="280"/>
+					</Size>
+					<Anchors>
+						<Anchor point="BOTTOM">
+							<Offset>
+								<AbsDimension x="0" y="48"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<EditBox name="$parentName" letters="40" historyLines="0" autofocus="false" inherits="KaymonsClosetInputBoxTemplate">
+				<Size>
+					<AbsDimension x="170" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="70" y="-40" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString inherits="GameFontNormalSmall" text="KaymonsCloset_cNameLabel" justifyH="RIGHT">
+							<Anchors>
+								<Anchor point="RIGHT" relativePoint="LEFT">
+									<Offset>
+										<AbsDimension x="-12" y="0" />
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+                        <FontString name="$parentCreateUsing" inherits="GameFontNormalSmall" text="KaymonsCloset_cUsingCurrentGearTitle">
+							<Anchors>
+								<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT">
+									<Offset>
+										<AbsDimension x="55" y="-30"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnEditFocusLost></OnEditFocusLost>
+					<OnEscapePressed>
+						self:ClearFocus();
+					</OnEscapePressed>
+					<OnEnterPressed>
+						KaymonsClosetNameOutfit_Done();
+					</OnEnterPressed>
+				</Scripts>
+				<FontString inherits="ChatFontNormal" />
+			</EditBox>
+			<Button name="$parentCancelButton" inherits="UIPanelButtonTemplate" text="CANCEL">
+				<Size>
+					<AbsDimension x="80" y="21" />
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="-15" y="20" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						KaymonsClosetNameOutfit_Cancel();
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentDoneButton" inherits="UIPanelButtonTemplate" text="OKAY">
+				<Size>
+					<AbsDimension x="80" y="21" />
+				</Size>
+				<Anchors>
+					<Anchor point="RIGHT" relativeTo="$parentCancelButton" relativePoint="LEFT">
+						<Offset>
+							<AbsDimension x="-7" y="0" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						KaymonsClosetNameOutfit_Done();
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				self.baseHeight = self:GetHeight();
+			</OnLoad>
+			<OnShow>
+				<!-- KaymonsClosetNameOutfit_Update(); -->
+			</OnShow>
+		</Scripts>
+	</Frame>
+    <Frame name="KaymonsClosetUpdateFrame" toplevel="true" parent="UIParent" hidden="true">
+		<Scripts>
+			<!-- <OnUpdate>OutfitterUpdateFrame_OnUpdate(self, arg1);</OnUpdate> -->
+			<OnUpdate function="KaymonsClosetUpdateFrame_OnUpdate" />
+		</Scripts>
+	</Frame>
+    <Button name="KaymonsClosetMinimapButton" hidden="false" enableMouse="true" movable="true" parent="Minimap" toplevel="true">
+		<Size>
+			<AbsDimension x="32" y="32"/>
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER">
+				<Offset><AbsDimension x="-80" y="0"/></Offset>
+			</Anchor>
+		</Anchors>
+		<NormalTexture file="Interface\Addons\KaymonsCloset\Textures\MinimapButton"/>
+		<HighlightTexture alphaMode="ADD" file="Interface\Minimap\UI-Minimap-ZoomButton-Highlight"/>
+		<Scripts>
+			<OnLoad>
+				self:RegisterForDrag("LeftButton");
+			</OnLoad>
+			<OnDragStart>
+				KaymonsClosetMinimapButton_DragStart();
+			</OnDragStart>
+			<OnDragStop>
+				KaymonsClosetMinimapButton_DragEnd();
+			</OnDragStop>
+			<OnMouseDown>
+				KaymonsClosetMinimapButton_MouseDown(self);
+			</OnMouseDown>
+			<OnMouseUp>
+				KaymonsClosetMinimapDropDown_OnLoad(self);
+				self.ChangedValueFunc = KaymonsClosetMinimapButton_ItemSelected;
+				ToggleDropDownMenu(nil, nil, self);
+				
+				-- Hack to force the menu to position correctly.  UIDropDownMenu code
+				-- keeps thinking that it's off the screen and trying to reposition
+				-- it, which it does very poorly
+				
+				KaymonsClosetMinimapDropDown_AdjustScreenPosition(self);
+				
+				<!-- PlaySound("igMainMenuOptionCheckBoxOn"); -->
+			</OnMouseUp>
+			<OnEnter>
+				GameTooltip_AddNewbieTip(self, KaymonsCloset_cMinimapButtonTitle, 1, 1, 1, KaymonsCloset_cMinimapButtonDescription, 1);
+			</OnEnter>
+			<OnLeave>
+				GameTooltip:Hide();
+			</OnLeave>
+		</Scripts>
+	</Button>
+</Ui>
