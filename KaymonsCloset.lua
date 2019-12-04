@@ -130,6 +130,7 @@ StaticPopupDialogs["KAYMONSCLOSET_CONFIRM_DELETE"] =
 
 local OUTFIT_MESSAGE_COLOR = {r = 0.2, g = 0.75, b = 0.3};
 local COMBAT_MESSAGE_COLOR = {r = 0.75, g = 0.2, b = 0.3};
+local BANKED_FONT_COLOR = {r = 0.25, g = 0.2, b = 1.0};
 
 local gKaymonsCloset_Initialized = false;
 
@@ -197,6 +198,7 @@ function KaymonsCloset_OnLoad(self)
 	self:RegisterEvent("BANKFRAME_OPENED");
 	self:RegisterEvent("BANKFRAME_CLOSED");
 	self:RegisterEvent("UNIT_INVENTORY_CHANGED");
+	self:RegisterEvent("BAG_UPDATE");
 
     PanelTemplates_SetNumTabs(self, table.getn(gKaymonsCloset_PanelFrames));
 	KaymonsClosetFrame.selectedTab = gKaymonsCloset_CurrentPanel;
@@ -265,7 +267,13 @@ function KaymonsCloset_OnEvent(event, arg1)
 		KaymonsCloset_BankFrameClosed();
 	elseif event == "UNIT_INVENTORY_CHANGED" then
 		KaymonsCloset_InventoryUpdate();
+	elseif event == "BAG_UPDATE" then
+		KaymonsCloset_BagUpdate();
     end
+end
+
+function KaymonsCloset_BagUpdate()
+	KaymonsCloset_Update();
 end
 
 function KaymonsCloset_InventoryUpdate()
@@ -289,17 +297,11 @@ end
 
 function KaymonsCloset_BankFrameOpened()
 	gKaymonsCloset_BankFrameOpened = true;
-	
-	-- KaymonsCloset_BankSlotsChanged();
-	
 	KaymonsCloset_Update();
 end
 
 function KaymonsCloset_BankFrameClosed()
 	gKaymonsCloset_BankFrameOpened = false;
-	
-	-- KaymonsCloset_BankSlotsChanged();
-	
 	KaymonsCloset_Update();
 end
 
@@ -629,18 +631,48 @@ function KaymonsCloset_SetShowHotkeyMessages(pShowHotkeyMessages)
 	KaymonsCloset_Update();
 end
 
-function KaymonsCloset_GetMissingItems(pOutfit)
+function KaymonsCloset_ItemInBank(link)
+	if not gKaymonsCloset_BankFrameOpened then
+		return false;
+	end
+
+	-- check the big bank tab
+	for j = 1, 24 do
+		local banklink = GetContainerItemLink(-1, j);
+		if banklink == link then
+			return true;
+		end
+	end
+	-- check the rest of the bags
+	for vBagIndex = NUM_BAG_SLOTS + 1, NUM_BAG_SLOTS + NUM_BANKBAGSLOTS do
+		for j = 1, GetContainerNumSlots(vBagIndex) do
+			local banklink = GetContainerItemLink(vBagIndex, j);
+			if banklink == link then
+				return true;
+			end
+		end
+	end
+	-- couldnt find
+	return false;
+end
+
+function KaymonsCloset_GetBankedAndMissingItems(pOutfit)
+	local banked = {};
 	local missing = {};
 	for slotname, link in pairs(pOutfit.Items) do
-		if link ~= "nil" and link ~= "" and KaymonsCloset_IsMissing(link) then
+		if link ~= "nil" and link ~= "" and KaymonsCloset_ItemInBank(link) then
+			table.insert(banked, link);
+		elseif link ~= "nil" and link ~= "" and KaymonsCloset_IsMissing(link) then
 			table.insert(missing, link);
 		end
 	end
-	if table.getn(missing) > 0 then
-		return missing;
-	else
-		return nil;
+	if table.getn(banked) == 0 then
+		banked = nil;
 	end
+	if table.getn(missing) == 0 then
+		missing = nil;
+	end
+	return banked, missing;
 end
 
 function KaymonsCloset_OnShow(self)
@@ -798,7 +830,7 @@ function KaymonsCloset_UpdateSlotEnables(pOutfit)
 end
 
 function KaymonsClosetItem_SetToOutfit(pItemIndex, pOutfit, pCategoryID, pOutfitIndex)
-    local vItemName = "KaymonsClosetItem"..pItemIndex;
+	local vItemName = "KaymonsClosetItem"..pItemIndex;
 	local vItem = getglobal(vItemName);
 	local vOutfitFrameName = vItemName.."Outfit";
 	local vOutfitFrame = getglobal(vOutfitFrameName);
@@ -821,9 +853,9 @@ function KaymonsClosetItem_SetToOutfit(pItemIndex, pOutfit, pCategoryID, pOutfit
 		vItemSelectedCheckmark:SetChecked(nil);
     end
 	
-	local vMissingItems = KaymonsCloset_GetMissingItems(pOutfit);
+	local vBankedItems, vMissingItems = KaymonsCloset_GetBankedAndMissingItems(pOutfit);
 	vItem.MissingItems = vMissingItems;
-    -- vItem.BankedItems = vBankedItems;
+    vItem.BankedItems = vBankedItems;
     
     
 	vItemNameField:SetText(pOutfit.Name);
@@ -891,7 +923,7 @@ function KaymonsCloset_Update(pUpdateSlotEnables)
     if not KaymonsClosetFrame:IsVisible() then
 		return;
 	end
-    
+	
     if gKaymonsCloset_CurrentPanel == 1 then
 
 		KaymonsClosetMainFrameHighlight:Hide();
