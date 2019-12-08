@@ -402,7 +402,9 @@ function KaymonsCloset_SaveCurrentGear(pName)
     for slotname, slotid in pairs(KaymonsCloset_SlotInfo) do
         itemlink = GetInventoryItemLink("player", slotid);
         set.Items[slotname] = tostring(itemlink);
-    end
+	end
+	set.IsShowingHelm = ShowingHelm();
+	set.IsShowingCloak = ShowingCloak();
     return set;
 end
 
@@ -521,6 +523,13 @@ function KaymonsCloset_EquipGearSet(set)
 			end
 		end
 		gKaymonsCloset_SelectedOutfit = set;
+
+		if set.IsShowingHelm ~= nil then
+			ShowHelm(set.IsShowingHelm);
+		end
+		if set.IsShowingCloak ~= nil then
+			ShowCloak(set.IsShowingCloak);
+		end
 		
 		if not gKaymonsCloset_SetSwapInProgress then
 			-- no actual swaps needed made, can safely update
@@ -582,14 +591,14 @@ function KaymonsCloset_WearBoundOutfit(pBindingIndex)
 
 			if KaymonsCloset_WearingOutfit(vOutfit) then
 				KaymonsCloset_RemoveOutfit(vOutfit);
-				-- if not gOutfitter_Settings.Options.DisableHotkeyMessages then
+				if not gKaymonsCloset_Settings.Options.DisableHotkeyMessages then
 					UIErrorsFrame:AddMessage(format(KaymonsCloset_cUnequipOutfitMessageFormat, vOutfit.Name), OUTFIT_MESSAGE_COLOR.r, OUTFIT_MESSAGE_COLOR.g, OUTFIT_MESSAGE_COLOR.b);
-				-- end
+				end
 			else
 				KaymonsCloset_EquipGearSet(vOutfit, true);
-				-- if not gOutfitter_Settings.Options.DisableHotkeyMessages then
+				if not gKaymonsCloset_Settings.Options.DisableHotkeyMessages then
 					UIErrorsFrame:AddMessage(format(KaymonsCloset_cEquipOutfitMessageFormat, vOutfit.Name), OUTFIT_MESSAGE_COLOR.r, OUTFIT_MESSAGE_COLOR.g, OUTFIT_MESSAGE_COLOR.b);
-				-- end
+				end
 			end
             
             
@@ -637,7 +646,7 @@ end
 
 function KaymonsCloset_SetShowHotkeyMessages(pShowHotkeyMessages)
 	gKaymonsCloset_Settings.Options.DisableHotkeyMessages = not pShowHotkeyMessages;
-	
+	DEFAULT_CHAT_FRAME:AddMessage("gKaymonsCloset_Settings.Options.DisableHotkeyMessages: " .. tostring(gKaymonsCloset_Settings.Options.DisableHotkeyMessages))
 	KaymonsCloset_Update();
 end
 
@@ -1104,7 +1113,11 @@ function KaymonsClosetItemDropDown_Initialize(self)
 		
 		KaymonsCloset_AddSubmenuItem(vFrame, KaymonsCloset_cKeyBinding, "BINDING");
 		
-        KaymonsCloset_AddMenuItem(vFrame, DELETE, "DELETE");
+		KaymonsCloset_AddMenuItem(vFrame, DELETE, "DELETE");
+		
+		KaymonsCloset_AddMenuItem(vFrame, "Show Helm", "SHOWHELM", vOutfit.IsShowingHelm);
+		
+        KaymonsCloset_AddMenuItem(vFrame, "Show Cloak", "SHOWCLOAK", vOutfit.IsShowingCloak);
 		
 		KaymonsCloset_AddCategoryMenuItem(KaymonsCloset_cBankCategoryTitle);
 		KaymonsCloset_AddMenuItem(vFrame, KaymonsCloset_cDepositToBank, "DEPOSIT", nil, nil, nil, not gKaymonsCloset_BankFrameOpened);
@@ -1484,6 +1497,12 @@ function KaymonsCloset_OutfitItemSelected(self, pValue)
 		KaymonsCloset_DepositOutfit(vOutfit, true);
 	elseif pValue == "WITHDRAW" then
 		KaymonsCloset_WithdrawOutfit(vOutfit);
+	elseif pValue == "SHOWHELM" then
+		vOutfit.IsShowingHelm = not vOutfit.IsShowingHelm;
+		ShowHelm(vOutfit.IsShowingHelm);
+	elseif pValue == "SHOWCLOAK" then
+		vOutfit.IsShowingCloak = not vOutfit.IsShowingCloak;
+		ShowCloak(vOutfit.IsShowingCloak);
 	end
 	
 	KaymonsCloset_Update();
