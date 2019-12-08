@@ -278,12 +278,9 @@ function KaymonsCloset_InventoryUpdate()
 	local set = KaymonsCloset_SaveCurrentGear();
 	gKaymonsCloset_CurrentOutfit = set;
 	if gKaymonsCloset_SetSwapInProgress then
-		if gKaymonsCloset_SelectedOutfit then
-			local vOutfit = KaymonsCloset_GetOutfit(gKaymonsCloset_SelectedOutfit.Name);
-			if vOutfit.Items == gKaymonsCloset_SelectedOutfit.Items then
-				gKaymonsCloset_SetSwapInProgress = false;
-				KaymonsCloset_Update(true);
-			end
+		if gKaymonsCloset_SelectedOutfit and KaymonsCloset_WearingOutfit(gKaymonsCloset_SelectedOutfit) then
+			gKaymonsCloset_SetSwapInProgress = false;
+			KaymonsCloset_Update(true);
 		end
 	elseif KaymonsClosetSlotEnables:IsVisible() then
 		-- single item swap
@@ -1086,6 +1083,8 @@ function KaymonsCloset_AddCategoryMenuItem(pName)
 end
 
 function KaymonsCloset_GetOutfit(name)
+	if name == nil then return nil end
+
 	for _, vOutfit in pairs(gKaymonsCloset_Settings.Outfits["Sets"]) do
 		if string.upper(vOutfit.Name) == string.upper(name) then
 			return vOutfit;
