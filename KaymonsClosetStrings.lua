@@ -74,6 +74,6 @@ KaymonsCloset_cAboutTitle = "About KaymonsCloset";
 KaymonsCloset_cAuthor = "Written by Kaymon-Incendius (original UI code from Outfitter)";
 
 KaymonsCloset_cSpecialThanksTitle = "Special thanks to";
-KaymonsCloset_cSpecialThanksNames = "John Stephen - original Outfitter writter";
+KaymonsCloset_cSpecialThanksNames = "John Stephen - original Outfitter writer";
 
 KaymonsCloset_cCantEquipInCombat = "Cannot Equip Sets In Combat";
