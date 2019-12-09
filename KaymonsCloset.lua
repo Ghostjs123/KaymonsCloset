@@ -1795,7 +1795,7 @@ function KaymonsCloset_WithdrawOutfit(pOutfit)
 							for j = 1, GetContainerNumSlots(i) do
 								local link = GetContainerItemLink(i, j);
 								if link and link == vItem then
-									PickupContainerItem(-1, j);
+									PickupContainerItem(i, j);
 									break;
 								end
 							end
