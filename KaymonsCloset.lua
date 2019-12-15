@@ -287,7 +287,7 @@ function KaymonsCloset_InventoryUpdate()
 		local vOutfit = KaymonsCloset_GetOutfit(gKaymonsCloset_SelectedOutfit.Name);
 		vOutfit.Items = set.Items;
 	end
-	KaymonsCloset_Update();
+	-- KaymonsCloset_Update();
 end
 
 function KaymonsCloset_BankFrameOpened()
@@ -474,6 +474,7 @@ end
 
 -- equips specified gearset
 function KaymonsCloset_EquipGearSet(set)
+	KaymonsClosetSlotEnables:Hide();
     local bag = -1;
     local count = 0;
 	local printedFull = false
@@ -785,6 +786,12 @@ function KaymonsCloset_SlotEnableClicked(pCheckbox, pButton)
 	end
 	
 	local vChecked = pCheckbox:GetChecked();
+
+	if pCheckbox.IsUnknown then
+		pCheckbox.IsUnknown = false;
+		pCheckbox:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check");
+		vChecked = true;
+	end
 	
 	KaymonsCloset_SetSlotEnable(pCheckbox.SlotName, vChecked);
 	KaymonsCloset_Update();
@@ -944,7 +951,7 @@ function KaymonsCloset_Update(pUpdateSlotEnables)
 
 		KaymonsClosetMainFrameHighlight:Hide();
 		
-		if pUpdateSlotEnables then
+		if pUpdateSlotEnables and not gKaymonsCloset_SetSwapInProgress then
 			KaymonsCloset_SelectOutfit(gKaymonsCloset_SelectedOutfit);
 		end
         
