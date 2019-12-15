@@ -138,6 +138,10 @@ local gKaymonsCloset_SetToRename = nil;
 local gKaymonsCloset_OutfitToDelete = nil;
 local gKaymonsCloset_PreviousSet = nil;
 
+local gKaymonsCloset_IsDead = false;
+local gKaymonsCloset_ExpectedOutfit = nil;
+local gKaymonsCloset_ExpectedAction = nil;
+
 local gKaymonsCloset_SetSwapInProgress = false;
 
 local gKaymonsCloset_SelectedOutfit = nil;
@@ -198,6 +202,8 @@ function KaymonsCloset_OnLoad(self)
 	self:RegisterEvent("BANKFRAME_CLOSED");
 	self:RegisterEvent("UNIT_INVENTORY_CHANGED");
 	self:RegisterEvent("BAG_UPDATE");
+	self:RegisterEvent("PLAYER_ALIVE");
+	self:RegisterEvent("PLAYER_DEAD");
 
     PanelTemplates_SetNumTabs(self, table.getn(gKaymonsCloset_PanelFrames));
 	KaymonsClosetFrame.selectedTab = gKaymonsCloset_CurrentPanel;
@@ -267,7 +273,21 @@ function KaymonsCloset_OnEvent(event, arg1)
 		KaymonsCloset_InventoryUpdate();
 	elseif event == "BAG_UPDATE" then
 		KaymonsCloset_BagUpdate();
+	elseif event == "PLAYER_DEAD" then
+		KaymonsCloset_PlayerDead();
+	elseif event == "PLAYER_ALIVE" then
+		KaymonsCloset_PlayerAlive();
     end
+end
+
+function KaymonsCloset_PlayerDead(pEvent)
+	gKaymonsCloset_IsDead = true;
+end
+
+function KaymonsCloset_PlayerAlive(pEvent)
+	if not UnitIsDeadOrGhost("player") then
+		gKaymonsCloset_IsDead = false;
+	end
 end
 
 function KaymonsCloset_BagUpdate()
@@ -549,8 +569,8 @@ function KaymonsCloset_FindOpenBag(start)
     for i = start, 4 do
         slots, bagType = GetContainerNumFreeSlots(i);
         if(slots > 0 and bagType == 0) then
-            KaymonsCloset_Print("Found bag: " .. tostring(i) .. " with slots: " .. tostring(slots), true);
-            KaymonsCloset_Print("bagType: " .. tostring(bagType), true);
+            -- KaymonsCloset_Print("Found bag: " .. tostring(i) .. " with slots: " .. tostring(slots), true);
+            -- KaymonsCloset_Print("bagType: " .. tostring(bagType), true);
             return i, slots;
         end
     end
@@ -582,28 +602,41 @@ function KaymonsCloset_WearBoundOutfit(pBindingIndex)
 			gKaymonsCloset_LastBindingTime = vTime;
 			return;
 		end
-    end
-    
+	end
+	
 	for _, vOutfit in pairs(gKaymonsCloset_Settings.Outfits["Sets"]) do
-        if vOutfit.BindingIndex == pBindingIndex then
-
+		if vOutfit.BindingIndex == pBindingIndex then
+			
 			if KaymonsCloset_WearingOutfit(vOutfit) then
-				KaymonsCloset_RemoveOutfit(vOutfit);
+				if gKaymonsCloset_Settings.Options.QueueInCombatSwaps and UnitAffectingCombat("player") then
+					-- queue
+					gKaymonsCloset_ExpectedOutfit = vOutfit;
+					gKaymonsCloset_ExpectedAction = "remove";
+					gKaymonsCloset_EquippedNeedsUpdate = true;
+				else
+					-- remove
+					KaymonsCloset_RemoveOutfit(vOutfit);
+				end
 				if not gKaymonsCloset_Settings.Options.DisableHotkeyMessages then
 					UIErrorsFrame:AddMessage(format(KaymonsCloset_cUnequipOutfitMessageFormat, vOutfit.Name), OUTFIT_MESSAGE_COLOR.r, OUTFIT_MESSAGE_COLOR.g, OUTFIT_MESSAGE_COLOR.b);
 				end
 			else
-				KaymonsCloset_EquipGearSet(vOutfit, true);
+				if gKaymonsCloset_Settings.Options.QueueInCombatSwaps and UnitAffectingCombat("player") then
+					-- queue
+					gKaymonsCloset_ExpectedOutfit = vOutfit;
+					gKaymonsCloset_ExpectedAction = "equip";
+					gKaymonsCloset_EquippedNeedsUpdate = true;
+				else
+					-- equip
+					KaymonsCloset_EquipGearSet(vOutfit, true);
+				end
 				if not gKaymonsCloset_Settings.Options.DisableHotkeyMessages then
 					UIErrorsFrame:AddMessage(format(KaymonsCloset_cEquipOutfitMessageFormat, vOutfit.Name), OUTFIT_MESSAGE_COLOR.r, OUTFIT_MESSAGE_COLOR.g, OUTFIT_MESSAGE_COLOR.b);
 				end
 			end
-            
-            
-            gKaymonsCloset_LastBindingIndex = pBindingIndex;
-            gKaymonsCloset_LastBindingTime = vTime;
-            
-            return;
+			
+			gKaymonsCloset_LastBindingIndex = pBindingIndex;
+			gKaymonsCloset_LastBindingTime = vTime;
 		end
 	end
 end
@@ -644,7 +677,13 @@ end
 
 function KaymonsCloset_SetShowHotkeyMessages(pShowHotkeyMessages)
 	gKaymonsCloset_Settings.Options.DisableHotkeyMessages = not pShowHotkeyMessages;
-	DEFAULT_CHAT_FRAME:AddMessage("gKaymonsCloset_Settings.Options.DisableHotkeyMessages: " .. tostring(gKaymonsCloset_Settings.Options.DisableHotkeyMessages))
+
+	KaymonsCloset_Update();
+end
+
+function KaymonsCloset_SetQueueInCombatSwaps(pQueueInCombatSwaps)
+	gKaymonsCloset_Settings.Options.QueueInCombatSwaps = pQueueInCombatSwaps;
+	
 	KaymonsCloset_Update();
 end
 
@@ -979,6 +1018,7 @@ function KaymonsCloset_Update(pUpdateSlotEnables)
         KaymonsClosetShowMinimapButton:SetChecked(not gKaymonsCloset_Settings.Options.HideMinimapButton);
         KaymonsClosetRememberVisibility:SetChecked(not gKaymonsCloset_Settings.Options.DisableAutoVisibility);
         KaymonsClosetShowHotkeyMessages:SetChecked(not gKaymonsCloset_Settings.Options.DisableHotkeyMessages);
+        KaymonsClosetQueueInCombatSwaps:SetChecked(gKaymonsCloset_Settings.Options.QueueInCombatSwaps);
 	end
 end
 
@@ -1233,12 +1273,31 @@ function KaymonsClosetUpdateFrame_OnUpdate(self, pElapsed)
 		KaymonsClosetUpdateFrame.Elapsed = KaymonsClosetUpdateFrame.Elapsed + pElapsed;
 		
 		if KaymonsClosetUpdateFrame.Elapsed > 0.25 then
-			-- KaymonsCloset_UpdateEquippedItems();
+			KaymonsCloset_UpdateEquippedItems();
 			KaymonsClosetUpdateFrame.Elapsed = 0;
 		end
 	end
 	
 	KaymonsClosetTimer_AdjustTimer();
+end
+
+function KaymonsCloset_UpdateEquippedItems()
+	if not gKaymonsCloset_EquippedNeedsUpdate then
+		return;
+	end
+
+	if gKaymonsCloset_IsDead then
+		return;
+	end
+
+	if not UnitAffectingCombat("player") then
+		if gKaymonsCloset_ExpectedAction == "remove" then
+			KaymonsCloset_RemoveOutfit(gKaymonsCloset_ExpectedOutfit);
+		else
+			KaymonsCloset_EquipGearSet(gKaymonsCloset_ExpectedOutfit);
+		end
+		gKaymonsCloset_EquippedNeedsUpdate = false;
+	end
 end
 
 function KaymonsClosetMinimapButton_DragStart()

@@ -638,6 +638,33 @@
 									</OnLeave>
 								</Scripts>
 							</CheckButton>
+							<CheckButton name="KaymonsClosetQueueInCombatSwaps" inherits="OptionsCheckButtonTemplate">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetShowHotkeyMessages" relativePoint="BOTTOMLEFT">
+										<Offset>
+											<AbsDimension x="0" y="-10"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Scripts>
+									<OnLoad>
+										getglobal(self:GetName().."Text"):SetText(KaymonsCloset_cQueueInCombatSwaps);
+									</OnLoad>
+									<OnClick>
+										KaymonsCloset_SetQueueInCombatSwaps(self:GetChecked());
+									</OnClick>
+									<OnEnter>
+										if self:GetChecked() then
+											GameTooltip_AddNewbieTip(self, KaymonsCloset_cQueueInCombatSwaps, 1.0, 1.0, 1.0, KaymonsCloset_cQueueInCombatSwapsOnDescription, 1);
+										else
+											GameTooltip_AddNewbieTip(self, KaymonsCloset_cQueueInCombatSwaps, 1.0, 1.0, 1.0, KaymonsCloset_cQueueInCombatSwapsOffDescription, 1);
+										end
+									</OnEnter>
+									<OnLeave>
+										GameTooltip:Hide();
+									</OnLeave>
+								</Scripts>
+							</CheckButton>
 						</Frames>
 						<Scripts>
 							<OnLoad>
@@ -1206,7 +1233,7 @@
 			</OnShow>
 		</Scripts>
 	</Frame>
-    <Frame name="KaymonsClosetUpdateFrame" toplevel="true" parent="UIParent" hidden="true">
+    <Frame name="KaymonsClosetUpdateFrame" toplevel="true" parent="UIParent">
 		<Scripts>
 			<!-- <OnUpdate>OutfitterUpdateFrame_OnUpdate(self, arg1);</OnUpdate> -->
 			<OnUpdate function="KaymonsClosetUpdateFrame_OnUpdate" />

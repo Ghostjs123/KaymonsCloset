@@ -62,6 +62,9 @@ KaymonsCloset_cRememberVisibilityOffDescription = "Turn this on if you want Kaym
 KaymonsCloset_cShowHotkeyMessages = "Show key binding outfit changes";
 KaymonsCloset_cShowHotkeyMessagesOnDescription = "Turn this off if you don't want to see a message when you change outfits using a key binding";
 KaymonsCloset_cShowHotkeyMessagesOffDescription = "Turn this on if you want to see a message when you change outfits using a key binding";
+KaymonsCloset_cQueueInCombatSwaps = "Queue in combat gear swaps"
+KaymonsCloset_cQueueInCombatSwapsOnDescription = "Turn this on if you want to queue gear swaps when in combat"
+KaymonsCloset_cQueueInCombatSwapsOffDescription = "Turn this off if you don't want to queue gear swaps when in combat"
 
 KaymonsCloset_cStatsCategory = "Stats";
 KaymonsCloset_cMeleeCategory = "Melee";
