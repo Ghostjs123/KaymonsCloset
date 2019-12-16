@@ -1926,6 +1926,7 @@ function KaymonsClosetItem_OnClick(pItem, pButton)
 		end
 		
 		KaymonsCloset_EquipGearSet(vOutfit);
+		KaymonsCloset_SelectOutfit(vOutfit);
 	end
 	
 	KaymonsCloset_Update();
