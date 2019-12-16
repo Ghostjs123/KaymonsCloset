@@ -33,6 +33,8 @@ KaymonsCloset_SlotInfo = {
     ["SecondaryHandSlot"] = 17,
     ["RangedSlot"] = 18,
     ["AmmoSlot"] = 0,
+    ["TabardSlot"] = 19,
+    ["ShirtSlot"] = 4
 };
 
 -- just the slots with durability
@@ -51,14 +53,6 @@ KaymonsCloset_DurabilitySlots = {
     ["SecondaryHandSlot"] = 17,
     ["RangedSlot"] = 18,
 };
-
--- NOTE: ignoring these slots
-    -- "TabardSlot"
-    -- "ShirtSlot"
-    -- "Bag0Slot"
-    -- "Bag1Slot"
-    -- "Bag2Slot"
-    -- "Bag3Slot"
 
 -- for Bindings.xml
 BINDING_HEADER_KAYMONSCLOSET_PLUGINNAME = "KaymonsCloset Outfits";
@@ -305,9 +299,20 @@ function KaymonsCloset_InventoryUpdate()
 	elseif KaymonsClosetSlotEnables:IsVisible() then
 		-- single item swap
 		local vOutfit = KaymonsCloset_GetOutfit(gKaymonsCloset_SelectedOutfit.Name);
-		vOutfit.Items = set.Items;
+		KaymonsCloset_UpdateIndividualItems(vOutfit, set);
 	end
-	-- KaymonsCloset_Update();
+end
+
+function KaymonsCloset_UpdateIndividualItems(pOutfit, pCurrent)
+	-- update pOutfit to match pCurrent if slot is enabled
+	for slotname, link in pairs(pOutfit.Items) do
+		if pCurrent.Items[slotname] ~= link then
+			local pCheckbox = getglobal("KaymonsClosetEnable" .. slotname);
+			if pCheckbox:GetChecked() then
+				pOutfit.Items[slotname] = pCurrent.Items[slotname];
+			end
+		end
+	end
 end
 
 function KaymonsCloset_BankFrameOpened()
@@ -1213,7 +1218,7 @@ end
 function KaymonsClosetTimer_AdjustTimer()
 	local vNeedTimer = false;
 	
-	if KaymonsClosetMinimapButton.IsDragging then
+	if KaymonsClosetMinimapButton.IsBeingDragged then
 		vNeedTimer = true;
 	end
 	
@@ -1263,7 +1268,7 @@ function KaymonsClosetMinimapDropDown_AdjustScreenPosition(pMenu)
 end
 
 function KaymonsClosetUpdateFrame_OnUpdate(self, pElapsed)
-	if KaymonsClosetMinimapButton.IsDragging then
+	if KaymonsClosetMinimapButton.IsBeingDragged then
 		KaymonsClosetMinimapButton_UpdateDragPosition(self);
 	end
 	
@@ -1300,13 +1305,13 @@ function KaymonsCloset_UpdateEquippedItems()
 	end
 end
 
-function KaymonsClosetMinimapButton_DragStart()
-	KaymonsClosetMinimapButton.IsDragging = true;
+function KaymonsClosetMinimapButton_DragStart(self)
+	KaymonsClosetMinimapButton.IsBeingDragged = true;
 	KaymonsClosetTimer_AdjustTimer();
 end
 
-function KaymonsClosetMinimapButton_DragEnd()
-	KaymonsClosetMinimapButton.IsDragging = false;
+function KaymonsClosetMinimapButton_DragEnd(self)
+	KaymonsClosetMinimapButton.IsBeingDragged = false;
 	KaymonsClosetTimer_AdjustTimer();
 end
 

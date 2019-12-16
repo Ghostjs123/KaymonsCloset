@@ -1255,10 +1255,10 @@
 				self:RegisterForDrag("LeftButton");
 			</OnLoad>
 			<OnDragStart>
-				KaymonsClosetMinimapButton_DragStart();
+				KaymonsClosetMinimapButton_DragStart(self);
 			</OnDragStart>
 			<OnDragStop>
-				KaymonsClosetMinimapButton_DragEnd();
+				KaymonsClosetMinimapButton_DragEnd(self);
 			</OnDragStop>
 			<OnMouseDown>
 				KaymonsClosetMinimapButton_MouseDown(self);
