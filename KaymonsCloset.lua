@@ -2,16 +2,6 @@ KaymonsCloset_debugmode = false;
 
 KaymonsCloset_PrintFormat = "|c00f7f26c%s|r";
 
-local KaymonsCloset_cStatCategoryInfo =
-{
-	{Category = "Stat", Name = KaymonsCloset_cStatsCategory},
-	{Category = "Melee", Name = KaymonsCloset_cMeleeCategory},
-	{Category = "Spell", Name = KaymonsCloset_cSpellsCategory},
-	{Category = "Regen", Name = KaymonsCloset_cRegenCategory},
-	{Category = "Resist", Name = KaymonsCloset_cResistCategory},
-	{Category = "Trade", Name = KaymonsCloset_cTradeCategory},
-};
-
 KaymonsCloset_SlotInfo = {
     ["HeadSlot"] = 1,
     ["NeckSlot"] = 2, 
@@ -109,6 +99,7 @@ local KaymonsCloset_cSpecialtyBags =
 KaymonsCloset_cCategoryDescriptions =
 {
 	Sets = KaymonsCloset_cSetsCategoryDescripton,
+	Automatic = KaymonsCloset_cAutomaticCategoryDescription,
 };
 
 StaticPopupDialogs["KAYMONSCLOSET_CONFIRM_DELETE"] =
@@ -125,6 +116,7 @@ StaticPopupDialogs["KAYMONSCLOSET_CONFIRM_DELETE"] =
 local OUTFIT_MESSAGE_COLOR = {r = 0.2, g = 0.75, b = 0.3};
 local COMBAT_MESSAGE_COLOR = {r = 0.75, g = 0.2, b = 0.3};
 local BANKED_FONT_COLOR = {r = 0.25, g = 0.2, b = 1.0};
+local BANKED_FONT_COLOR_CODE = "|cff4033ff";
 
 local gKaymonsCloset_Initialized = false;
 
@@ -154,7 +146,8 @@ local gKaymonsCloset_PanelFrames =
 
 local gKaymonsCloset_cCategoryOrder =
 {
-	"Sets"
+	"Sets",
+	"Automatic"
 };
 local gKaymonsCloset_Collapsed = {};
 
@@ -207,7 +200,7 @@ function KaymonsCloset_OnLoad(self)
 end
 
 function KaymonsCloset_NewNakedOutfit()
-    local set = KaymonsCloset_NewEmptyOutfit("Naked");
+	local set = KaymonsCloset_NewEmptyOutfit("Naked");
     for slotname, _ in pairs(KaymonsCloset_SlotInfo) do
         set.Items[slotname] = "";
 	end
@@ -217,11 +210,40 @@ function KaymonsCloset_NewNakedOutfit()
     return set;
 end
 
+function KaymonsCloset_NewRidingSet()
+	local set = KaymonsCloset_NewEmptyOutfit("Riding");
+	for slotname, _ in pairs(KaymonsCloset_SlotInfo) do
+        set.Items[slotname] = "";
+	end
+	set.Disabled = true;
+	return set;
+end
+
 function KaymonsCloset_InitializeOutfits()
     gKaymonsCloset_Settings.Outfits = {};
     gKaymonsCloset_Settings.Outfits["Sets"] = {};
+    gKaymonsCloset_Settings.Outfits["Automatic"] = {};
     
-	KaymonsCloset_AddOutfit(KaymonsCloset_NewNakedOutfit());
+	KaymonsCloset_AddOutfit(KaymonsCloset_NewNakedOutfit(), "Sets");
+	KaymonsCloset_AddOutfit(KaymonsCloset_NewRidingSet(), "Automatic");
+end
+
+function KaymonsCloset_BuildAutomatic()
+	if not gKaymonsCloset_Settings.Outfits["Automatic"] then
+		gKaymonsCloset_Settings.Outfits["Automatic"] = {};
+	end
+
+	-- fill automatic outfits if one is missing
+	local hasRiding = false;
+	for _, vOutfit in pairs(gKaymonsCloset_Settings.Outfits["Automatic"]) do
+		if vOutfit.Name == "Riding" then
+			hasRiding = true;
+			break;
+		end
+	end
+	if not hasRiding then
+		KaymonsCloset_AddOutfit(KaymonsCloset_NewRidingSet(), "Automatic");
+	end
 end
 
 function KaymonsCloset_Initialize()
@@ -236,6 +258,8 @@ function KaymonsCloset_Initialize()
     if not gKaymonsCloset_Settings.Outfits then
 		KaymonsCloset_InitializeOutfits();
 	end
+
+	KaymonsCloset_BuildAutomatic();
 
     if gKaymonsCloset_Settings.Options.HideMinimapButton then
 		KaymonsClosetMinimapButton:Hide();
@@ -410,7 +434,7 @@ function KaymonsClosetNameOutfit_Done()
 		KaymonsCloset_DeleteOutfit(gKaymonsCloset_SetToRename);
 	end
     gKaymonsCloset_SetToRename.Name = name;
-    KaymonsCloset_AddOutfit(gKaymonsCloset_SetToRename);
+    KaymonsCloset_AddOutfit(gKaymonsCloset_SetToRename, "Sets");
     gKaymonsCloset_SetToRename = nil;
     KaymonsClosetNameOutfitDialog:Hide()
 	KaymonsCloset_Update();
@@ -431,18 +455,18 @@ function KaymonsCloset_SaveCurrentGear(pName)
 end
 
 -- adds the gearset table to saved vars
-function KaymonsCloset_AddOutfit(pOutfit)
-    pOutfit.CategoryID = "Sets"
+function KaymonsCloset_AddOutfit(pOutfit, pCategoryID)
+    pOutfit.CategoryID = pCategoryID;
 	
 	if not gKaymonsCloset_Settings.Outfits then
 		gKaymonsCloset_Settings.Outfits = {};
 	end
 	
-	if not gKaymonsCloset_Settings.Outfits["Sets"] then
-		gKaymonsCloset_Settings.Outfits["Sets"] = {};
+	if not gKaymonsCloset_Settings.Outfits[pCategoryID] then
+		gKaymonsCloset_Settings.Outfits[pCategoryID] = {};
 	end
 	
-    table.insert(gKaymonsCloset_Settings.Outfits["Sets"], pOutfit);
+    table.insert(gKaymonsCloset_Settings.Outfits[pCategoryID], pOutfit);
 end
 
 function KaymonsCloset_DeleteOutfit(pOutfit)
@@ -500,10 +524,10 @@ end
 -- equips specified gearset
 function KaymonsCloset_EquipGearSet(set)
 	KaymonsClosetSlotEnables:Hide();
+	if set == nil or set.Disabled then return end
     local bag = -1;
     local count = 0;
-	local printedFull = false
-	if set == nil then return end
+	local printedFull = false;
 	if not UnitAffectingCombat("player") then
 		-- going to swap gear, save current gearset
 		gKaymonsCloset_PreviousSet = KaymonsCloset_SaveCurrentGear();
@@ -611,7 +635,7 @@ function KaymonsCloset_WearBoundOutfit(pBindingIndex)
 	
 	for _, vOutfit in pairs(gKaymonsCloset_Settings.Outfits["Sets"]) do
 		if vOutfit.BindingIndex == pBindingIndex then
-			
+			vOutfit.Disabled = nil;
 			if KaymonsCloset_WearingOutfit(vOutfit) then
 				if gKaymonsCloset_Settings.Options.QueueInCombatSwaps and UnitAffectingCombat("player") then
 					-- queue
@@ -776,7 +800,7 @@ function KaymonsCloset_IsOpen()
 end
 
 function KaymonsClosetItem_SetToCategory(pItemIndex, pCategoryID)
-    local vCategoryName = "Sets" -- getglobal("KaymonsCloset_c"..pCategoryID.."Outfits");
+    local vCategoryName = pCategoryID; -- getglobal("KaymonsCloset_c"..pCategoryID.."Outfits");
 	local vItemName = "KaymonsClosetItem"..pItemIndex;
 	local vItem = getglobal(vItemName);
 	local vCategoryFrameName = vItemName.."Category";
@@ -805,7 +829,7 @@ function KaymonsClosetItem_SetToCategory(pItemIndex, pCategoryID)
 	vItem.isCategory = true;
 	vItem.isOutfitItem = false;
 	vItem.outfitItem = nil;
-	vItem.categoryID = pCategoryID;
+	vItem.CategoryID = pCategoryID;
 	
 	vItem:Show();
 end
@@ -924,16 +948,20 @@ function KaymonsClosetItem_SetToOutfit(pItemIndex, pOutfit, pCategoryID, pOutfit
 	vItem.MissingItems = vMissingItems;
     vItem.BankedItems = vBankedItems;
     
-    
-	vItemNameField:SetText(pOutfit.Name);
-	if vMissingItems then
-		vItem.DefaultColor = RED_FONT_COLOR;
-	elseif vBankedItems then
-		vItem.DefaultColor = BANKED_FONT_COLOR;
+	if pOutfit.Disabled then
+		vItemNameField:SetText(format(KaymonsCloset_cDisabledOutfitName, pOutfit.Name));
+		vItem.DefaultColor = GRAY_FONT_COLOR;
 	else
-		vItem.DefaultColor = NORMAL_FONT_COLOR;
+		vItemNameField:SetText(pOutfit.Name);
+		if vMissingItems then
+			vItem.DefaultColor = RED_FONT_COLOR;
+		elseif vBankedItems then
+			vItem.DefaultColor = BANKED_FONT_COLOR;
+		else
+			vItem.DefaultColor = NORMAL_FONT_COLOR;
+		end
 	end
-    
+
     vItemNameField:SetTextColor(vItem.DefaultColor.r, vItem.DefaultColor.g, vItem.DefaultColor.b);
 	
 	vItemMenu:Show();
@@ -941,7 +969,7 @@ function KaymonsClosetItem_SetToOutfit(pItemIndex, pOutfit, pCategoryID, pOutfit
 	vItem.isCategory = false;
 	vItem.isOutfitItem = false;
 	vItem.outfitItem = nil;
-	vItem.categoryID = pCategoryID;
+	vItem.CategoryID = pCategoryID;
 	vItem.outfitIndex = pOutfitIndex;
 	
 	vItem:Show();
@@ -957,6 +985,8 @@ function KaymonsClosetItem_SetToOutfit(pItemIndex, pOutfit, pCategoryID, pOutfit
 end
 
 function KaymonsCloset_AddOutfitsToList(pOutfits, pCategoryID, pItemIndex, pFirstItemIndex)
+	local pOutfits = pOutfits[pCategoryID];
+
     if pFirstItemIndex == 0 then
 		KaymonsClosetItem_SetToCategory(pItemIndex, pCategoryID, false);
 		pItemIndex = pItemIndex + 1;
@@ -1001,15 +1031,30 @@ function KaymonsCloset_Update(pUpdateSlotEnables)
         
         local vFirstItemIndex = FauxScrollFrame_GetOffset(KaymonsClosetMainFrameScrollFrame);
         local vItemIndex = 0;
-        
-        vItemIndex, vFirstItemIndex = KaymonsCloset_AddOutfitsToList(gKaymonsCloset_Settings.Outfits["Sets"], 1, vItemIndex, vFirstItemIndex)
 		
+		for vCategoryIndex, vCategoryID in pairs(gKaymonsCloset_cCategoryOrder) do
+        	vItemIndex, vFirstItemIndex = KaymonsCloset_AddOutfitsToList(gKaymonsCloset_Settings.Outfits, vCategoryID, vItemIndex, vFirstItemIndex)
+		
+			if vItemIndex >= KaymonsCloset_cMaxDisplayedItems then
+				break;
+			end
+		end
+
 		for vItemIndex2 = vItemIndex, (KaymonsCloset_cMaxDisplayedItems - 1) do
 			local vItemName = "KaymonsClosetItem" .. vItemIndex2;
 			getglobal(vItemName):Hide();
 		end
         
-        local vTotalNumItems = table.getn(gKaymonsCloset_cCategoryOrder) + table.getn(gKaymonsCloset_Settings.Outfits["Sets"])
+		local vTotalNumItems = 0;
+		for vCategoryIndex, vCategoryID in pairs(gKaymonsCloset_cCategoryOrder) do
+			vTotalNumItems = vTotalNumItems + 1;
+			
+			local vOutfits = gKaymonsCloset_Settings.Outfits[vCategoryID];
+			
+			if not gKaymonsCloset_Collapsed[vCategoryID] and vOutfits then
+				vTotalNumItems = vTotalNumItems + table.getn(vOutfits);
+			end
+		end
 
         FauxScrollFrame_Update(
             KaymonsClosetMainFrameScrollFrame,
@@ -1021,7 +1066,7 @@ function KaymonsCloset_Update(pUpdateSlotEnables)
             0, 0);                          -- smallHighlightWidth, bigHighlightWidth
     elseif gKaymonsCloset_CurrentPanel == 2 then -- Options panel
         KaymonsClosetShowMinimapButton:SetChecked(not gKaymonsCloset_Settings.Options.HideMinimapButton);
-        KaymonsClosetRememberVisibility:SetChecked(not gKaymonsCloset_Settings.Options.DisableAutoVisibility);
+        -- KaymonsClosetRememberVisibility:SetChecked(not gKaymonsCloset_Settings.Options.DisableAutoVisibility);
         KaymonsClosetShowHotkeyMessages:SetChecked(not gKaymonsCloset_Settings.Options.DisableHotkeyMessages);
         KaymonsClosetQueueInCombatSwaps:SetChecked(gKaymonsCloset_Settings.Options.QueueInCombatSwaps);
 	end
@@ -1130,27 +1175,42 @@ function KaymonsCloset_AddSubmenuItem(pFrame, pName, pValue)
 	UIDropDownMenu_AddButton({text = pName, owner = pFrame, hasArrow = 1, value = pValue, textR = NORMAL_FONT_COLOR.r, textG = NORMAL_FONT_COLOR.g, textB = NORMAL_FONT_COLOR.b});
 end
 
-function KaymonsCloset_AddCategoryMenuItem(pName)
-	UIDropDownMenu_AddButton({text = pName, notCheckable = true, notClickable = true});
-end
-
 function KaymonsCloset_GetOutfit(name)
 	if name == nil then return nil end
 
-	for _, vOutfit in pairs(gKaymonsCloset_Settings.Outfits["Sets"]) do
-		if string.upper(vOutfit.Name) == string.upper(name) then
-			return vOutfit;
+	for vCategoryIndex, vCategoryID in pairs(gKaymonsCloset_cCategoryOrder) do
+		for _, vOutfit in pairs(gKaymonsCloset_Settings.Outfits[vCategoryID]) do
+			if string.upper(vOutfit.Name) == string.upper(name) then
+				return vOutfit;
+			end
 		end
 	end
 	return nil;
+end
+
+function KaymonsCloset_GetOutfitFromListItem(pItem)
+	if pItem.isCategory then
+		return nil;
+	end
+
+	if not gKaymonsCloset_Settings.Outfits then
+		return nil;
+	end
+
+	local vOutfits = gKaymonsCloset_Settings.Outfits[pItem.CategoryID];
+
+	if not vOutfits then
+		return nil;
+	end
+
+	return vOutfits[pItem.outfitIndex], pItem.CategoryID;
 end
 
 function KaymonsClosetItemDropDown_Initialize(self)
 	local vFrame = self;
 	-- local	vFrame = getglobal(UIDROPDOWNMENU_INIT_MENU);
 	local vItem = vFrame:GetParent():GetParent();
-	local name = getglobal(vItem:GetName() .. "OutfitName"):GetText();
-	local vOutfit = KaymonsCloset_GetOutfit(name);
+	local vOutfit = KaymonsCloset_GetOutfitFromListItem(vItem);
 	
 	if not vOutfit then
 		return;
@@ -1160,16 +1220,17 @@ function KaymonsClosetItemDropDown_Initialize(self)
 		
 		KaymonsCloset_AddCategoryMenuItem(vOutfit.Name);
 		
-        KaymonsCloset_AddMenuItem(vFrame, PET_RENAME, "RENAME");
-		
-		KaymonsCloset_AddSubmenuItem(vFrame, KaymonsCloset_cKeyBinding, "BINDING");
-		
-		KaymonsCloset_AddMenuItem(vFrame, DELETE, "DELETE");
-		
-		KaymonsCloset_AddMenuItem(vFrame, "Show Helm", "SHOWHELM", vOutfit.IsShowingHelm);
-		
-        KaymonsCloset_AddMenuItem(vFrame, "Show Cloak", "SHOWCLOAK", vOutfit.IsShowingCloak);
-		
+		if vOutfit.CategoryID == "Sets" then
+        	KaymonsCloset_AddMenuItem(vFrame, PET_RENAME, "RENAME");
+			KaymonsCloset_AddSubmenuItem(vFrame, KaymonsCloset_cKeyBinding, "BINDING");
+			KaymonsCloset_AddMenuItem(vFrame, DELETE, "DELETE");
+			KaymonsCloset_AddMenuItem(vFrame, "Show Helm", "SHOWHELM", vOutfit.IsShowingHelm);
+        	KaymonsCloset_AddMenuItem(vFrame, "Show Cloak", "SHOWCLOAK", vOutfit.IsShowingCloak);
+		end
+
+		if vOutfit.CategoryID == "Automatic" then
+			KaymonsCloset_AddMenuItem(vFrame, KaymonsCloset_cDisableOutfit, "DISABLE", vOutfit.Disabled);
+		end
 		KaymonsCloset_AddCategoryMenuItem(KaymonsCloset_cBankCategoryTitle);
 		KaymonsCloset_AddMenuItem(vFrame, KaymonsCloset_cDepositToBank, "DEPOSIT", nil, nil, nil, not gKaymonsCloset_BankFrameOpened);
 		KaymonsCloset_AddMenuItem(vFrame, KaymonsCloset_cDepositUniqueToBank, "DEPOSITUNIQUE", nil, nil, nil, not gKaymonsCloset_BankFrameOpened);
@@ -1215,25 +1276,6 @@ function KaymonsClosetMinimapButton_UpdateDragPosition(self)
 	KaymonsClosetMinimapButton_SetPositionAngle(vAngle);
 end
 
-function KaymonsClosetTimer_AdjustTimer()
-	local vNeedTimer = false;
-	
-	if KaymonsClosetMinimapButton.IsBeingDragged then
-		vNeedTimer = true;
-	end
-	
-	if gKaymonsCloset_EquippedNeedsUpdate or gKaymonsCloset_WeaponsNeedUpdate then
-		vNeedTimer = true;
-	end
-	
-	if vNeedTimer then
-		KaymonsClosetUpdateFrame:Show();
-	else
-		KaymonsClosetUpdateFrame:Hide();
-		KaymonsClosetUpdateFrame.Elapsed = nil;
-	end
-end
-
 function KaymonsClosetMinimapDropDown_AdjustScreenPosition(pMenu)
 	local	vListFrame = getglobal("DropDownList1");
 	
@@ -1268,10 +1310,6 @@ function KaymonsClosetMinimapDropDown_AdjustScreenPosition(pMenu)
 end
 
 function KaymonsClosetUpdateFrame_OnUpdate(self, pElapsed)
-	if KaymonsClosetMinimapButton.IsBeingDragged then
-		KaymonsClosetMinimapButton_UpdateDragPosition(self);
-	end
-	
 	if not KaymonsClosetUpdateFrame.Elapsed then
 		KaymonsClosetUpdateFrame.Elapsed = 0;
 	else
@@ -1279,11 +1317,14 @@ function KaymonsClosetUpdateFrame_OnUpdate(self, pElapsed)
 		
 		if KaymonsClosetUpdateFrame.Elapsed > 0.25 then
 			KaymonsCloset_UpdateEquippedItems();
+			KaymonsCloset_CheckAutomatic();
 			KaymonsClosetUpdateFrame.Elapsed = 0;
 		end
 	end
-	
-	KaymonsClosetTimer_AdjustTimer();
+
+	if KaymonsClosetMinimapButton.IsBeingDragged then
+		KaymonsClosetMinimapButton_UpdateDragPosition(self);
+	end
 end
 
 function KaymonsCloset_UpdateEquippedItems()
@@ -1305,14 +1346,29 @@ function KaymonsCloset_UpdateEquippedItems()
 	end
 end
 
+function KaymonsCloset_CheckAutomatic()
+	-- checking for mount
+	local set = KaymonsCloset_GetOutfit("Riding", "Automatic");
+	if not set.Disabled and not KaymonsClosetSlotEnables:IsVisible() then
+		if IsMounted() then
+			if not KaymonsCloset_WearingOutfit(set) then
+				KaymonsCloset_EquipGearSet(set);
+			end
+		else
+			-- not mounted
+			if KaymonsCloset_WearingOutfit(set) then
+				KaymonsCloset_RemoveOutfit(set);
+			end
+		end
+	end
+end
+
 function KaymonsClosetMinimapButton_DragStart(self)
 	KaymonsClosetMinimapButton.IsBeingDragged = true;
-	KaymonsClosetTimer_AdjustTimer();
 end
 
 function KaymonsClosetMinimapButton_DragEnd(self)
 	KaymonsClosetMinimapButton.IsBeingDragged = false;
-	KaymonsClosetTimer_AdjustTimer();
 end
 
 function KaymonsClosetMinimapButton_MouseDown(self)
@@ -1545,8 +1601,7 @@ end
 
 function KaymonsCloset_OutfitItemSelected(self, pValue)
 	local vItem = self:GetParent():GetParent();
-	local name = getglobal(vItem:GetName() .. "OutfitName"):GetText();
-	local vOutfit = KaymonsCloset_GetOutfit(name);
+	local vOutfit = KaymonsCloset_GetOutfitFromListItem(vItem);
 	
 	if not vOutfit then
 		KaymonsCloset_ErrorMessage("KaymonsCloset Error: Outfit for menu item "..vItem:GetName().." not found");
@@ -1573,6 +1628,12 @@ function KaymonsCloset_OutfitItemSelected(self, pValue)
 	elseif pValue == "SHOWCLOAK" then
 		vOutfit.IsShowingCloak = not vOutfit.IsShowingCloak;
 		ShowCloak(vOutfit.IsShowingCloak);
+	elseif pValue == "DISABLE" then
+		if vOutfit.Disabled then
+			vOutfit.Disabled = nil;
+		else
+			vOutfit.Disabled = true;
+		end
 	end
 	
 	KaymonsCloset_Update();
@@ -1785,9 +1846,11 @@ function KaymonsCloset_DepositOutfit(pOutfit, pUniqueItemsOnly)
 	end
 
 	if pUniqueItemsOnly then
-		for _, vOutfit in pairs(gKaymonsCloset_Settings.Outfits["Sets"]) do
-			if vOutfit ~= pOutfit then
-				KaymonsCloset_SubtractOutfit(vUnequipOutfit, vOutfit)
+		for vCategoryIndex, vCategoryID in pairs(gKaymonsCloset_cCategoryOrder) do
+			for _, vOutfit in pairs(gKaymonsCloset_Settings.Outfits[vCategoryID]) do
+				if vOutfit ~= pOutfit then
+					KaymonsCloset_SubtractOutfit(vUnequipOutfit, vOutfit)
+				end
 			end
 		end
 	end
@@ -1888,7 +1951,7 @@ function KaymonsClosetItem_CheckboxClicked(pItem)
 		return;
 	end
 	
-	local vOutfits = gKaymonsCloset_Settings.Outfits["Sets"];
+	local vOutfits = gKaymonsCloset_Settings.Outfits[pItem.CategoryID];
 	
 	if not vOutfits then
 		-- Error: outfit category not found
@@ -1906,6 +1969,7 @@ function KaymonsClosetItem_CheckboxClicked(pItem)
 	local vCheckbox = getglobal(pItem:GetName().."OutfitSelected");
 	
 	if vCheckbox:GetChecked() then
+		vOutfit.Disabled = nil;
 		KaymonsCloset_EquipGearSet(vOutfit);
 	end
 	
@@ -1914,17 +1978,17 @@ end
 
 function KaymonsClosetItem_OnClick(pItem, pButton)
 	if pItem.isCategory then
-		local vCategoryOutfits = gKaymonsCloset_Settings.Outfits[pItem.categoryID];
+		local vCategoryOutfits = gKaymonsCloset_Settings.Outfits[pItem.CategoryID];
 		
-		gKaymonsCloset_Collapsed[pItem.categoryID] = not gKaymonsCloset_Collapsed[pItem.categoryID];
+		gKaymonsCloset_Collapsed[pItem.CategoryID] = not gKaymonsCloset_Collapsed[pItem.CategoryID];
 	else
-		local id = tonumber(string.sub(pItem:GetName(), -1));
-		local vOutfit = gKaymonsCloset_Settings.Outfits["Sets"][id];
+		local vOutfit = KaymonsCloset_GetOutfitFromListItem(pItem);
 		
 		if not vOutfit then
 			return;
 		end
 		
+		vOutfit.Disabled = nil;
 		KaymonsCloset_EquipGearSet(vOutfit);
 		KaymonsCloset_SelectOutfit(vOutfit);
 	end
@@ -1944,8 +2008,55 @@ function KaymonsClosetItem_SetTextColor(pItem, pRed, pGreen, pBlue)
 	vItemNameField:SetTextColor(pRed, pGreen, pBlue);
 end
 
+KaymonsCloset_cMissingItemsSeparator = ", ";
+function KaymonsCloset_GenerateItemListString(pLabel, pListColorCode, pItems)
+	local vItemList = nil;
+
+	for vIndex, vOutfitItem in pairs(pItems) do
+		if not vItemList then
+			vItemList = HIGHLIGHT_FONT_COLOR_CODE..pLabel..pListColorCode..vOutfitItem;
+		else
+			vItemList = vItemList..KaymonsCloset_cMissingItemsSeparator..vOutfitItem;
+		end
+	end
+
+	return vItemList;
+end
+
 function KaymonsClosetItem_OnEnter(self)
 	KaymonsClosetItem_SetTextColor(self, HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b);
+	
+	if self.isCategory then
+		local vDescription = KaymonsCloset_cCategoryDescriptions[self.CategoryID];
+
+		if vDescription then
+			local vCategoryName = getglobal("KaymonsCloset_c"..self.CategoryID.."Outfits");
+			GameTooltip_AddNewbieTip(self, vCategoryName, 1.0, 1.0, 1.0, vDescription, 1);
+		end
+	else
+		local vOutfit = KaymonsCloset_GetOutfitFromListItem(self);
+
+		if not vOutfit then
+			return;
+		end
+	
+		if self.MissingItems or self.BankedItems then
+			GameTooltip:SetOwner(self, "ANCHOR_LEFT");
+			GameTooltip:AddLine(vOutfit.Name);
+
+			if self.MissingItems then
+				local vItemList = KaymonsCloset_GenerateItemListString(KaymonsCloset_cMissingItemsLabel, RED_FONT_COLOR_CODE, self.MissingItems);
+				GameTooltip:AddLine(vItemList, RED_FONT_COLOR.r, RED_FONT_COLOR.g, RED_FONT_COLOR.b, true);
+			end
+
+			if self.BankedItems then
+				local vItemList = KaymonsCloset_GenerateItemListString(KaymonsCloset_cBankedItemsLabel, BANKED_FONT_COLOR_CODE, self.BankedItems);
+				GameTooltip:AddLine(vItemList, RED_FONT_COLOR.r, RED_FONT_COLOR.g, RED_FONT_COLOR.b, true);
+			end
+		end
+	end
+
+	GameTooltip:Show();
 end
 
 function KaymonsClosetItem_OnLeave(self)

@@ -23,6 +23,7 @@ KaymonsCloset_cConfirmRebuildMsg = "Are you sure you want to rebuild the outfit 
 KaymonsCloset_cRebuild = "Rebuild";
 
 KaymonsCloset_cSetsCategoryDescripton = "All Gearsets, will replace all specified items when worn.";
+KaymonsCloset_cAutomaticCategoryDescription = "All Gearsets can be automated for specific events.";
 
 KaymonsCloset_cSlotEnableTitle = "Slot Enable";
 KaymonsCloset_cSlotEnableDescription = "Select this if you want the item in this slot to be equipped when changing to the selected outfit.  If not selected then this slot will not be modified when changing to the selected outfit.";
@@ -49,6 +50,9 @@ KaymonsCloset_cUseEmptyOutfit = "Create Empty Outfit";
 
 KaymonsCloset_cOpenKaymonsCloset = "Open KaymonsCloset";
 
+KaymonsCloset_cMissingItemsLabel = "Missing items: ";
+KaymonsCloset_cBankedItemsLabel = "Banked items: ";
+
 KaymonsCloset_cMinimapButtonTitle = "KaymonsCloset Minimap Button";
 KaymonsCloset_cMinimapButtonDescription = "Click to select a different outfit or drag to re-position this button.";
 
@@ -66,12 +70,8 @@ KaymonsCloset_cQueueInCombatSwaps = "Queue in combat gear swaps"
 KaymonsCloset_cQueueInCombatSwapsOnDescription = "Turn this on if you want to queue gear swaps when in combat"
 KaymonsCloset_cQueueInCombatSwapsOffDescription = "Turn this off if you don't want to queue gear swaps when in combat"
 
-KaymonsCloset_cStatsCategory = "Stats";
-KaymonsCloset_cMeleeCategory = "Melee";
-KaymonsCloset_cSpellsCategory = "Healing and Spells";
-KaymonsCloset_cRegenCategory = "Regeneration";
-KaymonsCloset_cResistCategory = "Resistances";
-KaymonsCloset_cTradeCategory = "Trade Skills";
+KaymonsCloset_cDisableOutfit = "Disable Outfit";
+KaymonsCloset_cDisabledOutfitName = "%s (Disabled)";
 
 KaymonsCloset_cAboutTitle = "About KaymonsCloset";
 KaymonsCloset_cAuthor = "Written by Kaymon-Incendius (original UI code from Outfitter)";

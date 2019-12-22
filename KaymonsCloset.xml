@@ -584,7 +584,7 @@
 									</OnLeave>
 								</Scripts>
 							</CheckButton>
-							<CheckButton name="KaymonsClosetRememberVisibility" inherits="OptionsCheckButtonTemplate">
+							<!-- <CheckButton name="KaymonsClosetRememberVisibility" inherits="OptionsCheckButtonTemplate">
 								<Anchors>
 									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetShowMinimapButton" relativePoint="BOTTOMLEFT">
 										<Offset>
@@ -610,10 +610,10 @@
 										GameTooltip:Hide();
 									</OnLeave>
 								</Scripts>
-							</CheckButton>
+							</CheckButton> -->
 							<CheckButton name="KaymonsClosetShowHotkeyMessages" inherits="OptionsCheckButtonTemplate">
 								<Anchors>
-									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetRememberVisibility" relativePoint="BOTTOMLEFT">
+									<Anchor point="TOPLEFT" relativeTo="KaymonsClosetShowMinimapButton" relativePoint="BOTTOMLEFT">
 										<Offset>
 											<AbsDimension x="0" y="-10"/>
 										</Offset>
@@ -1233,7 +1233,7 @@
 			</OnShow>
 		</Scripts>
 	</Frame>
-    <Frame name="KaymonsClosetUpdateFrame" toplevel="true" parent="UIParent">
+    <Frame name="KaymonsClosetUpdateFrame" toplevel="true" parent="UIParent" hidden="false">
 		<Scripts>
 			<!-- <OnUpdate>OutfitterUpdateFrame_OnUpdate(self, arg1);</OnUpdate> -->
 			<OnUpdate function="KaymonsClosetUpdateFrame_OnUpdate" />
