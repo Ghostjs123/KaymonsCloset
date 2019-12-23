@@ -122,11 +122,13 @@ local gKaymonsCloset_Initialized = false;
 
 local gKaymonsCloset_SetToRename = nil;
 local gKaymonsCloset_OutfitToDelete = nil;
-local gKaymonsCloset_PreviousSet = nil;
+gKaymonsCloset_PreviousSet = nil;
 
 local gKaymonsCloset_IsDead = false;
 local gKaymonsCloset_ExpectedOutfit = nil;
 local gKaymonsCloset_ExpectedAction = nil;
+
+local gKaymonsCloset_InCombat = false;
 
 local gKaymonsCloset_SetSwapInProgress = false;
 
@@ -191,6 +193,8 @@ function KaymonsCloset_OnLoad(self)
 	self:RegisterEvent("BAG_UPDATE");
 	self:RegisterEvent("PLAYER_ALIVE");
 	self:RegisterEvent("PLAYER_DEAD");
+	self:RegisterEvent("PLAYER_REGEN_ENABLED");
+	self:RegisterEvent("PLAYER_REGEN_DISABLED");
 
     PanelTemplates_SetNumTabs(self, table.getn(gKaymonsCloset_PanelFrames));
 	KaymonsClosetFrame.selectedTab = gKaymonsCloset_CurrentPanel;
@@ -295,7 +299,19 @@ function KaymonsCloset_OnEvent(event, arg1)
 		KaymonsCloset_PlayerDead();
 	elseif event == "PLAYER_ALIVE" then
 		KaymonsCloset_PlayerAlive();
+	elseif event == "PLAYER_REGEN_ENABLED" then
+		KaymonsCloset_RegenEnabled();
+	elseif event == "PLAYER_REGEN_DISABLED" then
+		KaymonsCloset_RegenDisabled();
     end
+end
+
+function KaymonsCloset_RegenEnabled()
+	gKaymonsCloset_InCombat = false;
+end
+
+function KaymonsCloset_RegenDisabled()
+	gKaymonsCloset_InCombat = true;
 end
 
 function KaymonsCloset_PlayerDead(pEvent)
@@ -528,9 +544,10 @@ function KaymonsCloset_EquipGearSet(set)
     local bag = -1;
     local count = 0;
 	local printedFull = false;
-	if not UnitAffectingCombat("player") then
+	if not UnitAffectingCombat("player") and not gKaymonsCloset_InCombat then
 		-- going to swap gear, save current gearset
 		gKaymonsCloset_PreviousSet = KaymonsCloset_SaveCurrentGear();
+		DEFAULT_CHAT_FRAME:AddMessage("Updated previous: " .. tostring(gKaymonsCloset_PreviousSet.Items.HandsSlot))
 		for slotname, itemlink in pairs(set.Items) do
 			if itemlink == "nil" then
 				if GetInventoryItemLink("player", KaymonsCloset_SlotInfo[slotname]) then
@@ -1337,7 +1354,7 @@ function KaymonsCloset_UpdateEquippedItems()
 		return;
 	end
 
-	if not UnitAffectingCombat("player") then
+	if not UnitAffectingCombat("player") and not gKaymonsCloset_InCombat then
 		if gKaymonsCloset_ExpectedAction == "remove" then
 			KaymonsCloset_RemoveOutfit(gKaymonsCloset_ExpectedOutfit);
 		else
@@ -1350,7 +1367,7 @@ end
 function KaymonsCloset_CheckAutomatic()
 	-- checking for mount
 	local set = KaymonsCloset_GetOutfit("Riding", "Automatic");
-	if not set.Disabled and not KaymonsClosetSlotEnables:IsVisible() then
+	if not set.Disabled and not KaymonsClosetSlotEnables:IsVisible() and not gKaymonsCloset_SetSwapInProgress then
 		if IsMounted() then
 			if not KaymonsCloset_WearingOutfit(set) then
 				KaymonsCloset_EquipGearSet(set);
