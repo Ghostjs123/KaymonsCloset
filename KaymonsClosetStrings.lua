@@ -1,4 +1,4 @@
-KaymonsCloset_cVersion = "1.0";
+KaymonsCloset_cVersion = "2.0";
 
 KaymonsCloset_cTitle = "KaymonsCloset";
 KaymonsCloset_cTitleVersion = KaymonsCloset_cTitle.." "..KaymonsCloset_cVersion;

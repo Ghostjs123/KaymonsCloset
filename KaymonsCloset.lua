@@ -589,6 +589,7 @@ end
 
 function KaymonsCloset_RemoveOutfit(pOutfit)
 	if gKaymonsCloset_PreviousSet == nil then return end
+	KaymonsCloset_SubtractOutfit2(gKaymonsCloset_PreviousSet, pOutfit);
 	KaymonsCloset_EquipGearSet(gKaymonsCloset_PreviousSet);
 end
 
@@ -681,7 +682,7 @@ function KaymonsCloset_tprint(tbl, indent)
         elseif type(v) == 'boolean' then
             DEFAULT_CHAT_FRAME:AddMessage(formatting .. tostring(v))
         else
-            DEFAULT_CHAT_FRAME:AddMessage(formatting .. v)
+            DEFAULT_CHAT_FRAME:AddMessage(formatting .. tostring(v))
         end
     end
 end
@@ -1831,6 +1832,16 @@ function KaymonsCloset_SubtractOutfit(pOutfit1, pOutfit2)
 
 		if vItem1 == vItem2 then
 			pOutfit1.Items[vInventorySlot] = nil;
+		end
+	end
+end
+
+function KaymonsCloset_SubtractOutfit2(pOutfit1, pOutfit2)
+	for vInventorySlot, _ in pairs(KaymonsCloset_SlotInfo) do
+		local vItem2 = pOutfit2.Items[vInventorySlot];
+
+		if vItem2 == "" then
+			pOutfit1.Items[vInventorySlot] = "";
 		end
 	end
 end
