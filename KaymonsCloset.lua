@@ -123,6 +123,7 @@ local gKaymonsCloset_Initialized = false;
 local gKaymonsCloset_SetToRename = nil;
 local gKaymonsCloset_OutfitToDelete = nil;
 gKaymonsCloset_PreviousSet = nil;
+gKaymonsCloset_TempPreviousSet = nil;
 
 local gKaymonsCloset_IsDead = false;
 local gKaymonsCloset_ExpectedOutfit = nil;
@@ -312,6 +313,7 @@ end
 
 function KaymonsCloset_RegenDisabled()
 	gKaymonsCloset_InCombat = true;
+	gKaymonsCloset_SetSwapInProgress = false;
 end
 
 function KaymonsCloset_PlayerDead(pEvent)
@@ -334,6 +336,7 @@ function KaymonsCloset_InventoryUpdate()
 	if gKaymonsCloset_SetSwapInProgress then
 		if gKaymonsCloset_SelectedOutfit and KaymonsCloset_WearingOutfit(gKaymonsCloset_SelectedOutfit) then
 			gKaymonsCloset_SetSwapInProgress = false;
+			gKaymonsCloset_PreviousSet = gKaymonsCloset_TempPreviousSet;
 			KaymonsCloset_Update(true);
 		end
 	elseif KaymonsClosetSlotEnables:IsVisible() then
@@ -544,9 +547,9 @@ function KaymonsCloset_EquipGearSet(set)
     local bag = -1;
     local count = 0;
 	local printedFull = false;
-	if not UnitAffectingCombat("player") and not gKaymonsCloset_InCombat then
+	if not gKaymonsCloset_InCombat then
 		-- going to swap gear, save current gearset
-		gKaymonsCloset_PreviousSet = KaymonsCloset_SaveCurrentGear();
+		gKaymonsCloset_TempPreviousSet = KaymonsCloset_SaveCurrentGear();
 		for slotname, itemlink in pairs(set.Items) do
 			if itemlink == "nil" then
 				if GetInventoryItemLink("player", KaymonsCloset_SlotInfo[slotname]) then
@@ -654,7 +657,7 @@ function KaymonsCloset_WearBoundOutfit(pBindingIndex)
 		if vOutfit.BindingIndex == pBindingIndex then
 			vOutfit.Disabled = nil;
 			if KaymonsCloset_WearingOutfit(vOutfit) then
-				if gKaymonsCloset_Settings.Options.QueueInCombatSwaps and UnitAffectingCombat("player") then
+				if gKaymonsCloset_Settings.Options.QueueInCombatSwaps and gKaymonsCloset_InCombat then
 					-- queue
 					gKaymonsCloset_ExpectedOutfit = vOutfit;
 					gKaymonsCloset_ExpectedAction = "remove";
@@ -667,7 +670,7 @@ function KaymonsCloset_WearBoundOutfit(pBindingIndex)
 					UIErrorsFrame:AddMessage(format(KaymonsCloset_cUnequipOutfitMessageFormat, vOutfit.Name), OUTFIT_MESSAGE_COLOR.r, OUTFIT_MESSAGE_COLOR.g, OUTFIT_MESSAGE_COLOR.b);
 				end
 			else
-				if gKaymonsCloset_Settings.Options.QueueInCombatSwaps and UnitAffectingCombat("player") then
+				if gKaymonsCloset_Settings.Options.QueueInCombatSwaps and gKaymonsCloset_InCombat then
 					-- queue
 					gKaymonsCloset_ExpectedOutfit = vOutfit;
 					gKaymonsCloset_ExpectedAction = "equip";
@@ -1353,7 +1356,7 @@ function KaymonsCloset_UpdateEquippedItems()
 		return;
 	end
 
-	if not UnitAffectingCombat("player") and not gKaymonsCloset_InCombat then
+	if not gKaymonsCloset_InCombat then
 		if gKaymonsCloset_ExpectedAction == "remove" then
 			KaymonsCloset_RemoveOutfit(gKaymonsCloset_ExpectedOutfit);
 		else
@@ -1364,6 +1367,10 @@ function KaymonsCloset_UpdateEquippedItems()
 end
 
 function KaymonsCloset_CheckAutomatic()
+	if gKaymonsCloset_IsDead then
+		return;
+	end
+
 	-- checking for mount
 	local set = KaymonsCloset_GetOutfit("Riding", "Automatic");
 	if not set.Disabled and not KaymonsClosetSlotEnables:IsVisible() and not gKaymonsCloset_SetSwapInProgress then
