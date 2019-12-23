@@ -547,7 +547,6 @@ function KaymonsCloset_EquipGearSet(set)
 	if not UnitAffectingCombat("player") and not gKaymonsCloset_InCombat then
 		-- going to swap gear, save current gearset
 		gKaymonsCloset_PreviousSet = KaymonsCloset_SaveCurrentGear();
-		DEFAULT_CHAT_FRAME:AddMessage("Updated previous: " .. tostring(gKaymonsCloset_PreviousSet.Items.HandsSlot))
 		for slotname, itemlink in pairs(set.Items) do
 			if itemlink == "nil" then
 				if GetInventoryItemLink("player", KaymonsCloset_SlotInfo[slotname]) then
