@@ -122,16 +122,15 @@ local gKaymonsCloset_Initialized = false;
 
 local gKaymonsCloset_SetToRename = nil;
 local gKaymonsCloset_OutfitToDelete = nil;
-gKaymonsCloset_PreviousSet = nil;
 gKaymonsCloset_TempPreviousSet = nil;
 
-local gKaymonsCloset_IsDead = false;
+gKaymonsCloset_IsDead = false;
 local gKaymonsCloset_ExpectedOutfit = nil;
 local gKaymonsCloset_ExpectedAction = nil;
 
-local gKaymonsCloset_InCombat = false;
+gKaymonsCloset_InCombat = false;
 
-local gKaymonsCloset_SetSwapInProgress = false;
+gKaymonsCloset_SetSwapInProgress = false;
 
 local gKaymonsCloset_SelectedOutfit = nil;
 local gKaymonsCloset_CurrentOutfit = nil;
@@ -193,6 +192,7 @@ function KaymonsCloset_OnLoad(self)
 	self:RegisterEvent("UNIT_INVENTORY_CHANGED");
 	self:RegisterEvent("BAG_UPDATE");
 	self:RegisterEvent("PLAYER_ALIVE");
+	self:RegisterEvent("PLAYER_UNGHOST");
 	self:RegisterEvent("PLAYER_DEAD");
 	self:RegisterEvent("PLAYER_REGEN_ENABLED");
 	self:RegisterEvent("PLAYER_REGEN_DISABLED");
@@ -298,8 +298,8 @@ function KaymonsCloset_OnEvent(event, arg1)
 		KaymonsCloset_BagUpdate();
 	elseif event == "PLAYER_DEAD" then
 		KaymonsCloset_PlayerDead();
-	elseif event == "PLAYER_ALIVE" then
-		KaymonsCloset_PlayerAlive();
+	elseif event == "PLAYER_ALIVE" or event == "PLAYER_UNGHOST" then
+		KaymonsCloset_PlayerAlive(event);
 	elseif event == "PLAYER_REGEN_ENABLED" then
 		KaymonsCloset_RegenEnabled();
 	elseif event == "PLAYER_REGEN_DISABLED" then
@@ -318,6 +318,7 @@ end
 
 function KaymonsCloset_PlayerDead(pEvent)
 	gKaymonsCloset_IsDead = true;
+	gKaymonsCloset_SetSwapInProgress = false;
 end
 
 function KaymonsCloset_PlayerAlive(pEvent)
@@ -336,7 +337,8 @@ function KaymonsCloset_InventoryUpdate()
 	if gKaymonsCloset_SetSwapInProgress then
 		if gKaymonsCloset_SelectedOutfit and KaymonsCloset_WearingOutfit(gKaymonsCloset_SelectedOutfit) then
 			gKaymonsCloset_SetSwapInProgress = false;
-			gKaymonsCloset_PreviousSet = gKaymonsCloset_TempPreviousSet;
+			gKaymonsCloset_Settings.PreviousSet = gKaymonsCloset_TempPreviousSet;
+			-- DEFAULT_CHAT_FRAME:AddMessage("Updated previous: " .. tostring(gKaymonsCloset_Settings.PreviousSet.Items.HandsSlot))
 			KaymonsCloset_Update(true);
 		end
 	elseif KaymonsClosetSlotEnables:IsVisible() then
@@ -547,7 +549,7 @@ function KaymonsCloset_EquipGearSet(set)
     local bag = -1;
     local count = 0;
 	local printedFull = false;
-	if not gKaymonsCloset_InCombat then
+	if not gKaymonsCloset_InCombat and not CursorHasItem() then
 		-- going to swap gear, save current gearset
 		gKaymonsCloset_TempPreviousSet = KaymonsCloset_SaveCurrentGear();
 		for slotname, itemlink in pairs(set.Items) do
@@ -607,9 +609,9 @@ function KaymonsCloset_EquipGearSet(set)
 end
 
 function KaymonsCloset_RemoveOutfit(pOutfit)
-	if gKaymonsCloset_PreviousSet == nil then return end
-	KaymonsCloset_SubtractOutfit2(gKaymonsCloset_PreviousSet, pOutfit);
-	KaymonsCloset_EquipGearSet(gKaymonsCloset_PreviousSet);
+	if gKaymonsCloset_Settings.PreviousSet == nil then return end
+	KaymonsCloset_SubtractOutfit2(gKaymonsCloset_Settings.PreviousSet, pOutfit);
+	KaymonsCloset_EquipGearSet(gKaymonsCloset_Settings.PreviousSet);
 end
 
 -- finds a bag with open slots
@@ -1373,7 +1375,7 @@ function KaymonsCloset_CheckAutomatic()
 
 	-- checking for mount
 	local set = KaymonsCloset_GetOutfit("Riding", "Automatic");
-	if not set.Disabled and not KaymonsClosetSlotEnables:IsVisible() and not gKaymonsCloset_SetSwapInProgress then
+	if not set.Disabled and not KaymonsClosetSlotEnables:IsVisible() and not gKaymonsCloset_SetSwapInProgress and not gKaymonsCloset_InCombat then
 		if IsMounted() then
 			if not KaymonsCloset_WearingOutfit(set) then
 				KaymonsCloset_EquipGearSet(set);
