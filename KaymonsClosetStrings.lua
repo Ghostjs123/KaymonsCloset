@@ -1,4 +1,4 @@
-KaymonsCloset_cVersion = "2.3";
+KaymonsCloset_cVersion = "2.4";
 
 KaymonsCloset_cTitle = "KaymonsCloset";
 KaymonsCloset_cTitleVersion = KaymonsCloset_cTitle.." "..KaymonsCloset_cVersion;
@@ -69,6 +69,8 @@ KaymonsCloset_cShowHotkeyMessagesOffDescription = "Turn this on if you want to s
 KaymonsCloset_cQueueInCombatSwaps = "Queue in combat gear swaps"
 KaymonsCloset_cQueueInCombatSwapsOnDescription = "Turn this on if you want to queue gear swaps when in combat"
 KaymonsCloset_cQueueInCombatSwapsOffDescription = "Turn this off if you don't want to queue gear swaps when in combat"
+KaymonsCloset_cRemovingQueuedOutfitMessageFormat = "Removing %s When Out of Combat";
+KaymonsCloset_cEquippingQueuedOutfitMessageFormat = "Equipping %s When Out of Combat";
 
 KaymonsCloset_cDisableOutfit = "Disable Outfit";
 KaymonsCloset_cDisabledOutfitName = "%s (Disabled)";
@@ -80,3 +82,4 @@ KaymonsCloset_cSpecialThanksTitle = "Special thanks to";
 KaymonsCloset_cSpecialThanksNames = "John Stephen - original Outfitter writer";
 
 KaymonsCloset_cCantEquipInCombat = "Cannot Equip Sets In Combat";
+KaymonsCloset_cCantEquipWithCursor = "Cannot Equip - Cursor is Occupied";

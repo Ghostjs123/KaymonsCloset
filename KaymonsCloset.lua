@@ -131,6 +131,7 @@ local gKaymonsCloset_ExpectedAction = nil;
 gKaymonsCloset_InCombat = false;
 
 gKaymonsCloset_SetSwapInProgress = false;
+gKaymonsCloset_SetSwapTimer = 0;
 
 local gKaymonsCloset_SelectedOutfit = nil;
 local gKaymonsCloset_CurrentOutfit = nil;
@@ -338,7 +339,7 @@ function KaymonsCloset_InventoryUpdate()
 		if gKaymonsCloset_SelectedOutfit and KaymonsCloset_WearingOutfit(gKaymonsCloset_SelectedOutfit) then
 			gKaymonsCloset_SetSwapInProgress = false;
 			gKaymonsCloset_Settings.PreviousSet = gKaymonsCloset_TempPreviousSet;
-			-- DEFAULT_CHAT_FRAME:AddMessage("Updated previous: " .. tostring(gKaymonsCloset_Settings.PreviousSet.Items.HandsSlot))
+
 			KaymonsCloset_Update(true);
 		end
 	elseif KaymonsClosetSlotEnables:IsVisible() then
@@ -355,6 +356,7 @@ function KaymonsCloset_UpdateIndividualItems(pOutfit, pCurrent)
 			local pCheckbox = getglobal("KaymonsClosetEnable" .. slotname);
 			if pCheckbox:GetChecked() then
 				pOutfit.Items[slotname] = pCurrent.Items[slotname];
+				KaymonsCloset_Print("Added " .. pCurrent.Items[slotname] .. string.format(KaymonsCloset_PrintFormat, " to " .. pOutfit.Name));
 			end
 		end
 	end
@@ -459,7 +461,7 @@ function KaymonsClosetNameOutfit_Done()
     gKaymonsCloset_SetToRename = nil;
     KaymonsClosetNameOutfitDialog:Hide()
 	KaymonsCloset_Update();
-	KaymonsCloset_Print("Created: " .. name);
+	KaymonsCloset_Print("Created " .. name);
 end
 
 -- builds the gearset table
@@ -544,54 +546,21 @@ end
 
 -- equips specified gearset
 function KaymonsCloset_EquipGearSet(set)
-	KaymonsClosetSlotEnables:Hide();
 	if set == nil or set.Disabled then return end
-    local bag = -1;
-    local count = 0;
-	local printedFull = false;
-	if not gKaymonsCloset_InCombat and not CursorHasItem() then
+    
+	if not gKaymonsCloset_InCombat and not CursorHasItem() and not gKaymonsCloset_SetSwapInProgress then	
+		KaymonsClosetSlotEnables:Hide();
+
 		-- going to swap gear, save current gearset
 		gKaymonsCloset_TempPreviousSet = KaymonsCloset_SaveCurrentGear();
-		for slotname, itemlink in pairs(set.Items) do
-			if itemlink == "nil" then
-				if GetInventoryItemLink("player", KaymonsCloset_SlotInfo[slotname]) then
-					gKaymonsCloset_SetSwapInProgress = true;
-					-- slot should be empty
-					if count == 0 and not printedFull then
-						bag, count = KaymonsCloset_FindOpenBag(bag+1);
-					end
-					if(count > 0) and not printedFull then
-						PickupInventoryItem(KaymonsCloset_SlotInfo[slotname]);
-						if(bag == 0) then
-							PutItemInBackpack();
-						else
-							PutItemInBag(bag+19);
-						end
-						count = count - 1;
-					elseif not printedFull then
-						KaymonsCloset_Print("Bags are full");
-						printedFull = true;
-					end
-				end
-			elseif itemlink ~= "" then
-				-- equip the item
-				local ismissing, i, j = KaymonsCloset_IsMissing(itemlink);
-				if not ismissing then
-					if(j ~= 0) then
-						gKaymonsCloset_SetSwapInProgress = true;
-						-- equip item from bags
-						PickupContainerItem(i, j);
-						local slotid = KaymonsCloset_SlotInfo[slotname];
-						EquipCursorItem(slotid);
-					end
-					-- if j == 0 then item is currenty equipped, continue
-				else
-					KaymonsCloset_Print(itemlink .. string.format(KaymonsCloset_PrintFormat, " is missing"));
-				end
-			end
-		end
+		
+		-- do the gear swap
+		KaymonsCloset_EquipGearSetHelper(set);
+
+		-- set SelectedOutfit
 		gKaymonsCloset_SelectedOutfit = set;
 
+		-- update Helm/Cloak
 		if set.IsShowingHelm ~= nil then
 			ShowHelm(set.IsShowingHelm);
 		end
@@ -599,19 +568,74 @@ function KaymonsCloset_EquipGearSet(set)
 			ShowCloak(set.IsShowingCloak);
 		end
 		
+		-- if Helper didnt set flag then immediatly update frame (nothing changed)
 		if not gKaymonsCloset_SetSwapInProgress then
-			-- no actual swaps needed made, can safely update
 			KaymonsCloset_Update(true);
 		end
-	else
+
+		return true;
+
+	elseif CursorHasItem() then
+		UIErrorsFrame:AddMessage(KaymonsCloset_cCantEquipWithCursor, COMBAT_MESSAGE_COLOR.r, COMBAT_MESSAGE_COLOR.g, COMBAT_MESSAGE_COLOR.b);
+	elseif gKaymonsCloset_InCombat then
 		UIErrorsFrame:AddMessage(KaymonsCloset_cCantEquipInCombat, COMBAT_MESSAGE_COLOR.r, COMBAT_MESSAGE_COLOR.g, COMBAT_MESSAGE_COLOR.b);
+	end
+
+	return false;
+end
+
+function KaymonsCloset_EquipGearSetHelper(set)
+	-- executes the gear swap
+	local bag = -1;
+    local count = 0;
+	local printedFull = false;
+	for slotname, itemlink in pairs(set.Items) do
+		-- slot should be empty
+		if itemlink == "nil" then
+			if GetInventoryItemLink("player", KaymonsCloset_SlotInfo[slotname]) then
+				gKaymonsCloset_SetSwapInProgress = true;
+
+				if count == 0 and not printedFull then
+					bag, count = KaymonsCloset_FindOpenBag(bag+1);
+				end
+
+				if(count > 0) and not printedFull then
+					PickupInventoryItem(KaymonsCloset_SlotInfo[slotname]);
+					if(bag == 0) then
+						PutItemInBackpack();
+					else
+						-- Note: bag indices are different for PutItemInBag
+						PutItemInBag(bag+19);
+					end
+					count = count - 1;
+				elseif not printedFull then
+					KaymonsCloset_Print("Bags are full");
+					printedFull = true;
+				end
+			end
+		-- Note: "" is dont care
+		elseif itemlink ~= "" then
+			-- equip the item
+			local ismissing, i, j = KaymonsCloset_IsMissing(itemlink);
+			if not ismissing then
+				if(j ~= 0) then
+					gKaymonsCloset_SetSwapInProgress = true;
+					PickupContainerItem(i, j);
+					local slotid = KaymonsCloset_SlotInfo[slotname];
+					EquipCursorItem(slotid);
+				end
+				-- Note: if j == 0 then item is currenty equipped, continue
+			else
+				KaymonsCloset_Print(itemlink .. string.format(KaymonsCloset_PrintFormat, " is missing"));
+			end
+		end
 	end
 end
 
 function KaymonsCloset_RemoveOutfit(pOutfit)
 	if gKaymonsCloset_Settings.PreviousSet == nil then return end
 	KaymonsCloset_SubtractOutfit2(gKaymonsCloset_Settings.PreviousSet, pOutfit);
-	KaymonsCloset_EquipGearSet(gKaymonsCloset_Settings.PreviousSet);
+	return KaymonsCloset_EquipGearSet(gKaymonsCloset_Settings.PreviousSet);
 end
 
 -- finds a bag with open slots
@@ -658,18 +682,25 @@ function KaymonsCloset_WearBoundOutfit(pBindingIndex)
 	for _, vOutfit in pairs(gKaymonsCloset_Settings.Outfits["Sets"]) do
 		if vOutfit.BindingIndex == pBindingIndex then
 			vOutfit.Disabled = nil;
+			local success = false;
+
 			if KaymonsCloset_WearingOutfit(vOutfit) then
 				if gKaymonsCloset_Settings.Options.QueueInCombatSwaps and gKaymonsCloset_InCombat then
 					-- queue
 					gKaymonsCloset_ExpectedOutfit = vOutfit;
 					gKaymonsCloset_ExpectedAction = "remove";
 					gKaymonsCloset_EquippedNeedsUpdate = true;
+
+					if not gKaymonsCloset_Settings.Options.DisableHotkeyMessages then
+						UIErrorsFrame:AddMessage(format(KaymonsCloset_cRemovingQueuedOutfitMessageFormat, vOutfit.Name), OUTFIT_MESSAGE_COLOR.r, OUTFIT_MESSAGE_COLOR.g, OUTFIT_MESSAGE_COLOR.b);
+					end
 				else
 					-- remove
-					KaymonsCloset_RemoveOutfit(vOutfit);
-				end
-				if not gKaymonsCloset_Settings.Options.DisableHotkeyMessages then
-					UIErrorsFrame:AddMessage(format(KaymonsCloset_cUnequipOutfitMessageFormat, vOutfit.Name), OUTFIT_MESSAGE_COLOR.r, OUTFIT_MESSAGE_COLOR.g, OUTFIT_MESSAGE_COLOR.b);
+					success = KaymonsCloset_RemoveOutfit(vOutfit);
+
+					if not gKaymonsCloset_Settings.Options.DisableHotkeyMessages and success then
+						UIErrorsFrame:AddMessage(format(KaymonsCloset_cUnequipOutfitMessageFormat, vOutfit.Name), OUTFIT_MESSAGE_COLOR.r, OUTFIT_MESSAGE_COLOR.g, OUTFIT_MESSAGE_COLOR.b);
+					end
 				end
 			else
 				if gKaymonsCloset_Settings.Options.QueueInCombatSwaps and gKaymonsCloset_InCombat then
@@ -677,12 +708,17 @@ function KaymonsCloset_WearBoundOutfit(pBindingIndex)
 					gKaymonsCloset_ExpectedOutfit = vOutfit;
 					gKaymonsCloset_ExpectedAction = "equip";
 					gKaymonsCloset_EquippedNeedsUpdate = true;
+
+					if not gKaymonsCloset_Settings.Options.DisableHotkeyMessages then
+						UIErrorsFrame:AddMessage(format(KaymonsCloset_cEquippingQueuedOutfitMessageFormat, vOutfit.Name), OUTFIT_MESSAGE_COLOR.r, OUTFIT_MESSAGE_COLOR.g, OUTFIT_MESSAGE_COLOR.b);
+					end
 				else
 					-- equip
-					KaymonsCloset_EquipGearSet(vOutfit, true);
-				end
-				if not gKaymonsCloset_Settings.Options.DisableHotkeyMessages then
-					UIErrorsFrame:AddMessage(format(KaymonsCloset_cEquipOutfitMessageFormat, vOutfit.Name), OUTFIT_MESSAGE_COLOR.r, OUTFIT_MESSAGE_COLOR.g, OUTFIT_MESSAGE_COLOR.b);
+					success = KaymonsCloset_EquipGearSet(vOutfit, true);
+
+					if not gKaymonsCloset_Settings.Options.DisableHotkeyMessages and success then
+						UIErrorsFrame:AddMessage(format(KaymonsCloset_cEquipOutfitMessageFormat, vOutfit.Name), OUTFIT_MESSAGE_COLOR.r, OUTFIT_MESSAGE_COLOR.g, OUTFIT_MESSAGE_COLOR.b);
+					end
 				end
 			end
 			
@@ -1344,6 +1380,17 @@ function KaymonsClosetUpdateFrame_OnUpdate(self, pElapsed)
 		end
 	end
 
+	if gKaymonsCloset_SetSwapInProgress then
+		gKaymonsCloset_SetSwapTimer = gKaymonsCloset_SetSwapTimer + pElapsed;
+
+		if gKaymonsCloset_SetSwapTimer > 2 then
+			-- set swap taking too long - cancel it
+			gKaymonsCloset_SetSwapInProgress = false;
+		end
+	else
+		gKaymonsCloset_SetSwapTimer = 0;
+	end
+
 	if KaymonsClosetMinimapButton.IsBeingDragged then
 		KaymonsClosetMinimapButton_UpdateDragPosition(self);
 	end
@@ -1358,12 +1405,15 @@ function KaymonsCloset_UpdateEquippedItems()
 		return;
 	end
 
-	if not gKaymonsCloset_InCombat then
-		if gKaymonsCloset_ExpectedAction == "remove" then
-			KaymonsCloset_RemoveOutfit(gKaymonsCloset_ExpectedOutfit);
-		else
-			KaymonsCloset_EquipGearSet(gKaymonsCloset_ExpectedOutfit);
-		end
+	-- NOTE: combat check handled in EquipGearSet
+	local success = false;
+	if gKaymonsCloset_ExpectedAction == "remove" then
+		success = KaymonsCloset_RemoveOutfit(gKaymonsCloset_ExpectedOutfit);
+	else
+		success = KaymonsCloset_EquipGearSet(gKaymonsCloset_ExpectedOutfit);
+	end
+	
+	if success then
 		gKaymonsCloset_EquippedNeedsUpdate = false;
 	end
 end
@@ -1375,6 +1425,7 @@ function KaymonsCloset_CheckAutomatic()
 
 	-- checking for mount
 	local set = KaymonsCloset_GetOutfit("Riding", "Automatic");
+	-- NOTE: doing dead/combat checks here to avoid UIError spam
 	if not set.Disabled and not KaymonsClosetSlotEnables:IsVisible() and not gKaymonsCloset_SetSwapInProgress and not gKaymonsCloset_InCombat then
 		if IsMounted() then
 			if not KaymonsCloset_WearingOutfit(set) then
@@ -1605,12 +1656,14 @@ function KaymonsCloset_SetSlotEnable(pSlotName, pEnable)
 		return;
 	end
 	
+	local vItemLink = KaymonsCloset_GetInventoryItemLink(pSlotName);
+
 	if pEnable then
-		local vItemLink = KaymonsCloset_GetInventoryItemLink(pSlotName);
-		
 		gKaymonsCloset_SelectedOutfit.Items[pSlotName] = vItemLink;
+		-- KaymonsCloset_Print("Added " .. vItemLink .. string.format(KaymonsCloset_PrintFormat, " to " .. gKaymonsCloset_SelectedOutfit.Name));
 	else
 		gKaymonsCloset_SelectedOutfit.Items[pSlotName] = "";
+		-- KaymonsCloset_Print("Removed " .. vItemLink .. string.format(KaymonsCloset_PrintFormat, " to " .. gKaymonsCloset_SelectedOutfit.Name));
 	end
 end
 
